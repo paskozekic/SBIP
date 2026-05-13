@@ -2,9 +2,16 @@
 
 Studentski projekt (FER, informacijski sustavi).
 
+## DZ3 – pragmatičan dogovor
+
+- **Dijagrami** (UML komponenti itd.): *trenutačno ne radimo* — fokus je **radi kod** (backend, frontend, testovi u repou).
+- **Implementacija svih tehničkih faza** (B: API, C: UI, D: testovi, E: README + prilozi kad treba): **ti** uz Cursor u ovom repou (logički i dalje „Osoba 1 + Osoba 2“ posao, ali jedan implementator).
+- **Kolega:** **QA** nakon svakog pusha (ručno + Cursor), s jasnom listom „što testirati“.
+- Za predmet: screenshotovi **stvarnih** ekrana i opis u PDF/docx kad funkcionalnost postoji; ako asistent zatraži dijagram, dodati **minimalno** kad je kod gotov.
+
 ## Tijek rada: implementacija i testiranje
 
-- **Implementacija (ti):** radiš posao i za „Osobu 1“ i za „Osobu 2“ (backend, UI, baza po potrebi), commitaš na **`develop`** (ili kratkotrajna `feature/*` grana pa merge u `develop`).
+- **Implementacija (ti):** cijeli tehnički opseg DZ3 (backend, UI, baza po potrebi), commit na **`develop`** (ili kratka `feature/*` pa merge).
 - **Testiranje (kolega):** nakon što pushaš, javi **hash commita** ili **PR na `develop`**. On lokalno: `git pull`, `git config core.hooksPath .githooks` (jednom), `docker compose up -d`, zatim ručno ili Cursorom provjerava što si naveo u commit poruci / kratkom popisu u chatu ili issueu.
 
 **Praktično:** u poruci commita ili u GitHub **Issue / komentar na PR** napiši 3–6 točaka „što testirati“ (npr. „GET /api/kategorije“, „kreiraj narudžbu s dvije stavke“). Tako Cursor i kolega znaju točno opseg QA-a za tu isporuku.

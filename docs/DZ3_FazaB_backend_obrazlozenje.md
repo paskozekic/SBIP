@@ -1,6 +1,8 @@
 # DZ3 – Faza B: što točno raditi na backendu (narudžba + kategorije)
 
-Ovaj dokument detaljno objašnjava dio plana iz **Faze B** vezan uz **Osobu 1 (narudžba, master–detail)** i **Osobu 2 (šifrarnik kategorija)**. Pretpostavlja se PostgreSQL shema iz `database/SPIB_schema.sql` (i po želji `database/SPIB_seed.sql`) te REST API iznad baze.
+Ovaj dokument detaljno objašnjava dio plana iz **Faze B** vezan uz **narudžbu (master–detail)** i **šifrarnik kategorija**. Pretpostavlja se PostgreSQL shema iz `database/SPIB_schema.sql` (i po želji `database/SPIB_seed.sql`) te REST API iznad baze.
+
+> **Napomena:** dijagrami su u timskom dogovoru **izvan trenutnog fokusa**; arhitektura se dokazuje **strukturom mapa u `backend/`** i kodom.
 
 ---
 
