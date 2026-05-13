@@ -24,6 +24,8 @@ Glavna tehnička dokumentacija zadatka: [`../DZ3_FazaB_backend_obrazlozenje.md`]
 | [B-sekcija-2.3-servis-validacija.md](B-sekcija-2.3-servis-validacija.md) | §2.3 — zaliha, cijena iz kataloga |
 | [B-sekcija-2.4-rest-narudzbe.md](B-sekcija-2.4-rest-narudzbe.md) | §2.4 — REST narudžbe (Postman / curl) |
 | [B-sekcija-3-kategorije.md](B-sekcija-3-kategorije.md) | §3 — šifrarnik kategorija (3.1–3.4) |
+| [B-sekcija-4-zajednicka-tocka-spajanja.md](B-sekcija-4-zajednicka-tocka-spajanja.md) | §4 — točka spajanja (`develop`, README, ručna provjera) |
+| [B-sekcija-5-kontrolna-lista.md](B-sekcija-5-kontrolna-lista.md) | §5 — kratka kontrolna lista (mapiranje na kod) |
 
 ## Što prijaviti ako nešto ne radi
 

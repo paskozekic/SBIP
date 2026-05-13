@@ -131,30 +131,17 @@ Frontendu za forme (npr. bicikl, kasnije) treba **kratak popis**: npr. `{ "kateg
 
 ## 4. Zajednička točka spajanja (iz plana)
 
-Kada:
+Cjeloviti opis kriterija i koraka za merge, README i ručnu provjeru nalazi se u zasebnoj datoteci (ne duplicirati ovdje):
 
-- Osoba 1 ima funkcionalan CRUD narudžbe + stavki kroz API, i
-- Osoba 2 ima funkcionalan CRUD kategorija + pretragu + dropdown listu,
-
-…radite **merge u zajedničku granu** (`develop`), ažurirate **README** s popisom ruta i kratkim primjerima JSON-a, te provjerite oba tijeka u Postmanu ili **PowerShellu** (`Invoke-RestMethod` / `irm`).
+**[`qa/B-sekcija-4-zajednicka-tocka-spajanja.md`](qa/B-sekcija-4-zajednicka-tocka-spajanja.md)**
 
 ---
 
 ## 5. Kratka kontrolna lista
 
-**Osoba 1**
+Tablica checkliste s mapiranjem na datoteke u repou:
 
-- [x] DTO / modeli za narudžbu i stavku  
-- [x] Repozitorij: detalj s stavkama, CRUD zaglavlja i stavki  
-- [x] Servis: barem jedno **složenije** poslovno pravilo  
-- [x] REST rute dokumentirane i isprobane  
-
-**Osoba 2**
-
-- [x] DTO / modeli za kategoriju  
-- [x] Repozitorij + servis: lista, pretraga, CRUD, zaštita brisanja ako treba  
-- [x] REST rute + odgovor pogodan za **dropdown**  
-- [x] README ili kontrakt API-ja ažuriran  
+**[`qa/B-sekcija-5-kontrolna-lista.md`](qa/B-sekcija-5-kontrolna-lista.md)**
 
 ---
 
