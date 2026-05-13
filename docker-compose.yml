@@ -1,0 +1,28 @@
+# SPIB – PostgreSQL za lokalni razvoj (DZ3)
+#
+# Pokretanje (iz korijena repozitorija):
+#   docker compose up -d
+#
+# Prvi put se izvršavaju database/SPIB_schema.sql i SPIB_seed.sql u tom redoslijedu.
+# Ponovno učitavanje SQL-a nakon promjene: docker compose down -v && docker compose up -d
+#
+# Opcionalno: kopiraj .env.example u .env i postavi POSTGRES_PASSWORD (Compose učitava .env za zamjenu varijabli ispod).
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: spib-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-spib}
+      POSTGRES_USER: ${POSTGRES_USER:-spib}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-spib_dev_promijeni_me}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - spib_pgdata:/var/lib/postgresql/data
+      - ./database/SPIB_schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+      - ./database/SPIB_seed.sql:/docker-entrypoint-initdb.d/02_seed.sql:ro
+
+volumes:
+  spib_pgdata:

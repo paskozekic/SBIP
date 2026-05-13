@@ -1,0 +1,8 @@
+#!/bin/sh
+# Uklanja automatski dodani trailer od Cursor agenta (ne želimo ga u povijesti).
+msg_file="$1"
+if [ -z "$msg_file" ] || [ ! -f "$msg_file" ]; then
+  exit 0
+fi
+grep -v '^Co-authored-by: Cursor <cursoragent@cursor.com>[[:space:]]*$' "$msg_file" > "$msg_file.tmp" && mv "$msg_file.tmp" "$msg_file"
+exit 0

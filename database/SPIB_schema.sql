@@ -1,4 +1,8 @@
-
+-- =============================================================================
+-- SPIB – Sustav za prodaju i iznajmljivanje bicikala
+-- PostgreSQL: kreiranje sheme (DZ2 / DZ3)
+-- Pokretanje: nakon CREATE DATABASE … \i SPIB_schema.sql
+-- =============================================================================
 
 CREATE TABLE Korisnik (
     korisnik_id SERIAL PRIMARY KEY,
@@ -8,7 +12,6 @@ CREATE TABLE Korisnik (
     lozinka VARCHAR(100) NOT NULL
 );
 
-
 CREATE TABLE Kupac (
     korisnik_id INT PRIMARY KEY,
     CONSTRAINT fk_kupac_korisnik
@@ -16,7 +19,6 @@ CREATE TABLE Kupac (
         REFERENCES Korisnik(korisnik_id)
         ON DELETE CASCADE
 );
-
 
 CREATE TABLE Djelatnik (
     korisnik_id INT PRIMARY KEY,
@@ -27,13 +29,12 @@ CREATE TABLE Djelatnik (
         ON DELETE CASCADE
 );
 
-
+-- Šifrarnik kategorija (DZ3): jedinstven naziv radi dropdowna i pretrage
 CREATE TABLE KategorijaBicikla (
     kategorija_id SERIAL PRIMARY KEY,
-    naziv VARCHAR(50) NOT NULL,
+    naziv VARCHAR(50) NOT NULL UNIQUE,
     opis TEXT
 );
-
 
 CREATE TABLE Bicikl (
     bicikl_id SERIAL PRIMARY KEY,
@@ -45,8 +46,8 @@ CREATE TABLE Bicikl (
     CONSTRAINT fk_bicikl_kategorija
         FOREIGN KEY (kategorija_id)
         REFERENCES KategorijaBicikla(kategorija_id)
+        ON DELETE RESTRICT
 );
-
 
 CREATE TABLE Narudzba (
     narudzba_id SERIAL PRIMARY KEY,
@@ -56,12 +57,13 @@ CREATE TABLE Narudzba (
     djelatnik_korisnik_id INT,
     CONSTRAINT fk_narudzba_kupac
         FOREIGN KEY (kupac_korisnik_id)
-        REFERENCES Kupac(korisnik_id),
+        REFERENCES Kupac(korisnik_id)
+        ON DELETE RESTRICT,
     CONSTRAINT fk_narudzba_djelatnik
         FOREIGN KEY (djelatnik_korisnik_id)
         REFERENCES Djelatnik(korisnik_id)
+        ON DELETE SET NULL
 );
-
 
 CREATE TABLE StavkaNarudzbe (
     stavka_id SERIAL PRIMARY KEY,
@@ -71,13 +73,13 @@ CREATE TABLE StavkaNarudzbe (
     narudzba_id INT NOT NULL,
     CONSTRAINT fk_stavka_bicikl
         FOREIGN KEY (bicikl_id)
-        REFERENCES Bicikl(bicikl_id),
+        REFERENCES Bicikl(bicikl_id)
+        ON DELETE RESTRICT,
     CONSTRAINT fk_stavka_narudzba
         FOREIGN KEY (narudzba_id)
         REFERENCES Narudzba(narudzba_id)
         ON DELETE CASCADE
 );
-
 
 CREATE TABLE Najam (
     najam_id SERIAL PRIMARY KEY,
@@ -89,17 +91,19 @@ CREATE TABLE Najam (
     kupac_korisnik_id INT NOT NULL,
     CONSTRAINT fk_najam_bicikl
         FOREIGN KEY (bicikl_id)
-        REFERENCES Bicikl(bicikl_id),
+        REFERENCES Bicikl(bicikl_id)
+        ON DELETE RESTRICT,
     CONSTRAINT fk_najam_djelatnik
         FOREIGN KEY (djelatnik_korisnik_id)
-        REFERENCES Djelatnik(korisnik_id),
+        REFERENCES Djelatnik(korisnik_id)
+        ON DELETE SET NULL,
     CONSTRAINT fk_najam_kupac
         FOREIGN KEY (kupac_korisnik_id)
-        REFERENCES Kupac(korisnik_id),
+        REFERENCES Kupac(korisnik_id)
+        ON DELETE RESTRICT,
     CONSTRAINT chk_datum_najma
         CHECK (datum_zavrsetka >= datum_pocetka)
 );
-
 
 CREATE TABLE Placanje (
     placanje_id SERIAL PRIMARY KEY,
@@ -108,7 +112,6 @@ CREATE TABLE Placanje (
     metoda VARCHAR(30) NOT NULL,
     status_placanja VARCHAR(30) NOT NULL
 );
-
 
 CREATE TABLE PlacanjeNajma (
     placanje_id INT PRIMARY KEY,
@@ -123,7 +126,6 @@ CREATE TABLE PlacanjeNajma (
         ON DELETE CASCADE
 );
 
-
 CREATE TABLE PlacanjeNarudzbe (
     placanje_id INT PRIMARY KEY,
     narudzba_id INT NOT NULL UNIQUE,
@@ -137,4 +139,17 @@ CREATE TABLE PlacanjeNarudzbe (
         ON DELETE CASCADE
 );
 
+-- Indeksi za FK i uobičajenu pretragu (DZ3 API)
+CREATE INDEX idx_bicikl_kategorija ON Bicikl (kategorija_id);
+CREATE INDEX idx_bicikl_naziv ON Bicikl (naziv);
+CREATE INDEX idx_narudzba_kupac ON Narudzba (kupac_korisnik_id);
+CREATE INDEX idx_narudzba_datum ON Narudzba (datum DESC);
+CREATE INDEX idx_stavka_narudzba ON StavkaNarudzbe (narudzba_id);
+CREATE INDEX idx_stavka_bicikl ON StavkaNarudzbe (bicikl_id);
+CREATE INDEX idx_najam_bicikl ON Najam (bicikl_id);
+CREATE INDEX idx_najam_kupac ON Najam (kupac_korisnik_id);
+CREATE INDEX idx_kategorija_naziv ON KategorijaBicikla (naziv);
 
+COMMENT ON TABLE KategorijaBicikla IS 'Šifrarnik kategorija bicikla (DZ3).';
+COMMENT ON TABLE Narudzba IS 'Zaglavlje narudžbe; stavke u StavkaNarudzbe.';
+COMMENT ON COLUMN StavkaNarudzbe.cijena IS 'Cijena u trenutku kupnje (snimak).';
