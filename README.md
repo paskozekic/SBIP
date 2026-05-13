@@ -2,6 +2,13 @@
 
 Studentski projekt (FER, informacijski sustavi).
 
+## Tijek rada: implementacija i testiranje
+
+- **Implementacija (ti):** radiš posao i za „Osobu 1“ i za „Osobu 2“ (backend, UI, baza po potrebi), commitaš na **`develop`** (ili kratkotrajna `feature/*` grana pa merge u `develop`).
+- **Testiranje (kolega):** nakon što pushaš, javi **hash commita** ili **PR na `develop`**. On lokalno: `git pull`, `git config core.hooksPath .githooks` (jednom), `docker compose up -d`, zatim ručno ili Cursorom provjerava što si naveo u commit poruci / kratkom popisu u chatu ili issueu.
+
+**Praktično:** u poruci commita ili u GitHub **Issue / komentar na PR** napiši 3–6 točaka „što testirati“ (npr. „GET /api/kategorije“, „kreiraj narudžbu s dvije stavke“). Tako Cursor i kolega znaju točno opseg QA-a za tu isporuku.
+
 ## Git hookovi (bez `Co-authored-by: Cursor` u commit porukama)
 
 Cursor ponekad doda trailer u commit. U repou je hook `.githooks/commit-msg` koji ga uklanja. **Jednom** nakon klona:
