@@ -84,6 +84,36 @@ API sluša na **http://localhost:3000** (ili `PORT` iz `.env`).
 
 **Greške:** validacija narudžbe/stavki → **400** s `{ "error": "..." }`. Brisanje kategorije s povezanim biciklima → **409**.
 
+## Kako testirati (PowerShell)
+
+Iz mape `backend/` (ili bilo gdje) uz pokrenut API i bazu:
+
+```powershell
+# Smoke
+irm http://localhost:3000/api/health
+irm http://localhost:3000/api/narudzbe/1
+irm http://localhost:3000/api/kategorije/za-odabir
+
+# POST narudžba
+$body = '{"status":"NOVA","kupac_korisnik_id":1,"djelatnik_korisnik_id":null}' 
+irm http://localhost:3000/api/narudzbe -Method POST -Body $body -ContentType "application/json"
+
+# PATCH kategorije (isto kao PUT)
+$kb = '{"naziv":"Gradski","opis":"test opis"}'
+irm http://localhost:3000/api/kategorije/1 -Method PATCH -Body $kb -ContentType "application/json"
+
+# 400 — prevelika količina (prilagodi narudzba_id / bicikl_id prema seedu)
+$sb = '{"bicikl_id":1,"kolicina":99999}'
+try { irm "http://localhost:3000/api/narudzbe/1/stavke" -Method POST -Body $sb -ContentType "application/json" } catch { $_.Exception.Response.StatusCode.value__ }
+
+# 409 — brisanje kategorije koja ima bicikle (npr. id 1)
+try { Invoke-WebRequest http://localhost:3000/api/kategorije/1 -Method DELETE } catch { $_.Exception.Response.StatusCode.value__ }
+```
+
+Detaljnije scenarije (DTO, zaliha, svi REST koraci): mapi **`docs/qa/`** (datoteke `B-sekcija-*.md`, [`Faza-B-uvod.md`](../docs/qa/Faza-B-uvod.md)).
+
+## Ostalo
+
 - **Build:** `npm run build` → `dist/`, pokretanje `npm start`
 - **Typecheck:** `npm run typecheck`
 

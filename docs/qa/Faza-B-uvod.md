@@ -41,6 +41,8 @@ Invoke-RestMethod -Uri http://localhost:3000/api/health
 Invoke-RestMethod -Uri http://localhost:3000/api/kategorije
 ```
 
+Dalje (POST/PATCH tijela, primjeri **400** / **409**): u [`../../backend/README.md`](../../backend/README.md) sekcija **Kako testirati (PowerShell)**.
+
 ## Kriterij „Faza B okolina OK“
 
 - [ ] Baza radi (Faza-A)  
