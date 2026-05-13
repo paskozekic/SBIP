@@ -4,6 +4,8 @@ Ovaj dokument detaljno objašnjava dio plana iz **Faze B** vezan uz **narudžbu 
 
 > **Napomena:** dijagrami su u timskom dogovoru **izvan trenutnog fokusa**; arhitektura se dokazuje **strukturom mapa u `backend/`** i kodom.
 
+> **Tim u ovom repou:** **Osoba 1** radi **cijelu implementaciju** (i narudžbu u §2 i kategorije u §3). **Osoba 2** radi **isključivo testiranje** nakon pusha, prema uputama u [`docs/qa/README.md`](qa/README.md). Naslovi „Osoba 1“ / „Osoba 2“ u nastavku odgovaraju **logičkoj podjeli predmeta**, ne podjeli na dva programera.
+
 ---
 
 ## 1. Svrha Faze B
@@ -14,7 +16,7 @@ Gradite **API sloj** koji:
 - primjenjuje **poslovna pravila** u **servisu**;
 - izlaže **REST endpointe** koje kasnije koristi frontend (Postman služi za provjeru prije UI-ja).
 
-Podjela: **Osoba 1** — `Narudzba` + `StavkaNarudzbe`. **Osoba 2** — `KategorijaBicikla`.
+U predmetnoj literaturi često: **Osoba 1** — `Narudzba` + `StavkaNarudzbe`; **Osoba 2** — `KategorijaBicikla`. **Kod nas** obje stavke implementira **Osoba 1**; **Osoba 2** samo **QA** (vidi napomenu iznad).
 
 ---
 
@@ -31,6 +33,8 @@ Podjela: **Osoba 1** — `Narudzba` + `StavkaNarudzbe`. **Osoba 2** — `Kategor
 
 - **Ulaz:** kreiranje / ažuriranje narudžbe; dodavanje / ažuriranje stavke (što frontend šalje).
 - **Izlaz:** jedan objekt „narudžba s poljem `stavke: [...]`“ pogodan za master–detail zaslon.
+
+**Implementacija u repou:** tipovi za JSON su u `backend/src/domain/narudzbaDto.ts` (`NarudzbaCreateDto`, `NarudzbaDetaljDto`, `StavkaCreateDto`, …); redci iz baze s JOIN-om u `narudzba.ts` (`NarudzbaListRow`, `NarudzbaDetaljRow`, `StavkaNarudzbeRow`); mapiranje DTO ↔ baza u `narudzbaService.ts`.
 
 ---
 

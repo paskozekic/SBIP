@@ -14,7 +14,7 @@ Studentski projekt (FER, informacijski sustavi). **Stack:** React + TypeScript (
 - **Implementacija (ti):** cijeli tehnički opseg DZ3 (backend, UI, baza po potrebi), commit na **`develop`** (ili kratka `feature/*` pa merge).
 - **Testiranje (kolega):** nakon što pushaš, javi **hash commita** ili **PR na `develop`**. On lokalno: `git pull`, `git config core.hooksPath .githooks` (jednom), `docker compose up -d`, zatim ručno ili Cursorom provjerava što si naveo u commit poruci / kratkom popisu u chatu ili issueu.
 
-**Praktično:** u poruci commita ili u GitHub **Issue / komentar na PR** napiši 3–6 točaka „što testirati“ (npr. „GET /api/narudzbe/1“, „kreiraj narudžbu s dvije stavke“). Tako Cursor i kolega znaju točno opseg QA-a za tu isporuku.
+**Praktično:** u poruci commita ili u GitHub **Issue / komentar na PR** napiši 3–6 točaka „što testirati“ (npr. „GET /api/kategorije“, „kreiraj narudžbu s dvije stavke“). Tako Cursor i kolega znaju točno opseg QA-a za tu isporuku.
 
 ## Git hookovi (bez `Co-authored-by: Cursor` u commit porukama)
 
@@ -58,7 +58,7 @@ npm install
 npm run dev
 ```
 
-API: **http://localhost:3000** (`/api/health`, `/api/narudzbe`, …).
+API: **http://localhost:3000** (`/api/health`, `/api/kategorije`, …).
 
 ## Frontend (React + TypeScript)
 
@@ -74,5 +74,6 @@ Sučelje: **http://localhost:5173** — u dva terminala pokreni **backend** pa *
 
 ## Dokumentacija
 
-- [`docs/qa/README.md`](docs/qa/README.md) — QA upute za **§2 narudžba** (Faza B)
-- [`docs/DZ3_FazaB_backend_obrazlozenje.md`](docs/DZ3_FazaB_backend_obrazlozenje.md) — Faza B, backend (cijeli plan; u ovom commitu implementirana je **§2**)
+- [`docs/qa/README.md`](docs/qa/README.md) — **QA upute za kolegu** (Faza A, Faza B, §2.1–2.4, §3)
+- [`docs/qa/STO-DODANO.md`](docs/qa/STO-DODANO.md) — kratak popis što je u repou
+- [`docs/DZ3_FazaB_backend_obrazlozenje.md`](docs/DZ3_FazaB_backend_obrazlozenje.md) — Faza B, backend (narudžba + kategorije)

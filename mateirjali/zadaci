@@ -1,0 +1,163 @@
+Informacijski sustavi 
+
+Domaće zadaće – ak. god. 2025/26. 
+
+ 
+
+Napomene:  
+
+Zadaće/projekti rade se u parovima. Za svaki projekt/par biti će kreirana jedinstvena mapa na portalu unutar Dokumenti \ Projekti. 
+
+Za svaku zadaću parovi u mapi projekta parovi kreiraju podmapu naziva oblika DZnn, gdje je nn redni broj zadaće. Svaki član para dobiva jednak broj bodova (ukupno najviše 30 po studentu, kako je u nastavku razloženo). 
+
+Dodatke kao što su izvršne datoteke ili baza podataka dostaviti u ZIP/RAR arhivi. 
+
+Za programske primjere isporučiti poveznicu na javni repozitorij (Github) s uputama za instalaciju i pokretanje. 
+
+Za bazu podataka isporučiti skriptu za kreiranje baze podataka te skriptu za punjenje baze podataka oglednim podacima. 
+
+Rok svake zadaće je u tjednu zadavanja do nedjelje, 23:59:59, tjedni su u IS-plan.xls 
+
+Plan isporuka zadaća zadan je na početku semestra, usklađen je s predavanjima, pa se zadaće mogu raditi unaprijed i nema razloga da ne mogu isporučene na vrijeme. 
+
+Sva dokumentacija isporučuje se u formatu Office Open XML (docx, xlsx, …) ili Open Document  (odt, …) uz popratni .PDF dokument (s kopiranim slikama modela itd.), a izvorni prilozi (slike, modeli, … ) u .ZIP, osim gdje je drukčije navedeno. 
+
+Priloge treba referencirati u izvornom dokumentu. 
+
+ 
+
+Preporuke (Svaki projekt je jedinstven) 
+
+Datoteke imenovati kao [OznakaProjekt]-[VrstaDokumenta].[nastavak], npr. Projekt-PrijedlogProjekta.doc, Projekt-SpecifikacijaDizajna.doc, … 
+
+ 
+
+Crtalice: razvojna okolina i pripadni alati, https://www.draw.io/ , https://www.lucidchart.com , https://www.projectlibre.com/ , https://erdplus.com/ , https://astah.net/products/free-student-license/, Visual Paradigm Community Edition, … 
+
+ 
+
+ 
+
+DZ – Prijedlog projekta (9 bodova)  
+
+Isporučiti, na hrvatskom jeziku: 
+
+prijedlog ili povelja projekta – 1 bod 
+
+naziv i kratica, kratki opis projekta, svrha, ciljevi, potencijalni korisnici ili tržište, isporuke te kriteriji za mjerenje uspješnosti 
+
+plan projekta – 1.5 bod 
+
+faze i ključni koraci, Ganttogram s prekretnicama (milestones) isporuka 
+
+plan ne smije biti generički i mora se specifično odnositi na konkretni projekt! 
+
+studiju izvedivosti prijedloga – 1.5 bod 
+
+ponderirano vrednovanje alternativa I analiza troškova 
+
+ponderirano vrednovanje provesti opisom i brojčanom ocjenom "7±2" ključne karakteristike za tri alternative, uz argumentaciju ocjena  
+
+analizu sadašnje vrijednosti troškova koristeći "7±2" ključna troška i koristi kroz barem 3 godine, uz argumentaciju troškova i koristi  
+
+ 
+
+Isporučiti specifikaciju zahtjeva:  
+
+Reprezentativni zahtjevi i njihovi prioriteti, za pojedinu vrstu zahtjeva – 1 bod 
+
+Poslovni zahtjevi (najmanje 2) 
+
+Korisnički zahtjevi (najmanje 3) 
+
+Funkcionalni zahtjevi (najmanje 5) 
+
+Nefunkcionalni (najmanje 2) 
+
+Model poslovnog procesa – dijagram toka podataka u tri razine – 2.5 boda 
+
+Dijagram konteksta (0. razina) 
+
+Pregledni dijagram glavniih procesa, temeljem funkcionalnih zahtjeva (1. razina) 
+
+Detaljni dijagram za odabrani proces (2. razina) 
+
+Slike dijagrama kopirati u specifikaciju, izvorne datoteke priložiti u mapu 
+
+Model funkcija, model stanja ili model programa (jedno od navedenog) – 1 bod 
+
+Dijagram dekompozicije funkcija 
+
+Dijagram promjene stanja 
+
+Mapa dijaloga 
+
+Matrica entiteti-događaji 
+
+Slike dijagrama kopirati u specifikaciju, izvorne datoteke priložiti  
+
+Izvori porijekla zahtjeva (barem 3) - 0.5 boda 
+
+zapisnici s intervjua  
+
+reprezentativni primjeri prikupljenih dokumenata  
+
+web adrese (URL) surogata s pripadnom kopijom zaslona i objašnjenjem funkcionalnosti 
+
+ 
+
+DZ – Specifikacija dizajna (6 bodova)  
+
+Oblikovanje podataka - 2 boda 
+
+Konceptualni model podataka – ER dijagram (najmanje 7 entiteta) 
+
+Modelirati spojne i veze višeg stupnja, specijalizacije te ključne atribute 
+
+Model baze podataka – dijagram + skripta za kreiranje baze podataka i inicijalno punjenje podataka u prilogu 
+
+Dozvoljene baze podataka su: Microsoft SQL Server, PosgreSQL, MongoDB ili baza podataka u oblaku (Firebase i slično), s tim da bude isporučen dijagram i skripta kako je prethodno navedeno. 
+
+Objektni model - 4 boda 
+
+Dijagram aktivnosti za korisničku priču s barem 5 aktivnosti 
+
+Aktivnosti trebaju odgovarati specifikaciji zahtjeva 
+
+Slučajevi korištenja za dijagram aktivnosti  
+
+navesti identifikator, naziv, sudionike i korake, alternative i podtokove 
+
+Dijagram slučajeva korištenja  
+
+CRC kartica (razred-odgovornosti-suradnici) i pripadni dijagram razreda (razredi, atributi i veze) 
+
+ 
+
+DZ – Ugradnja odabrane arhitekture (10 bodova)  
+
+Odabrati jednu od arhitektura obrađenih na predavanjima te isporučiti programsko rješenje, koje odgovara specifikaciji zahtjeva/dizajna (7 bodova) 
+
+s pripadnom dokumentacijom arhitekture (dijagram komponenti) 
+
+koje ugrađuje jedan zaslon/formu zaglavlja s detaljima (master-detail; pogledati dokument Primjeri/IS08-MasterDetail) te jedan zaslon/formu šifrarnika, s funkcionalnostima:  
+
+navigacija podacima (pregled i pretraživanje) 
+
+stvaranje, čitanje, ažuriranje i brisanje podataka (CRUD) 
+
+mogućnost odabira vrijednosti stranog ključa putem padajuće liste u zaglavlju i detaljima složenog ekrana 
+
+validacija podataka koja se ne svodi na provjeru je li podatak popunjen, u valjanom rasponu, već se provjerava neko složenije pravilo 
+
+Isporučiti programsko rješenje za testiranje isporučenog rješenja koje sadrži (3 boda) 
+
+Definicije odvojenih jediničnih testova za razrede prezentacijskog sloja, poslovnog sloja i sloja za pristup podacima 
+
+Definicije integracijskih testova koji dokazuju da su slojevi međusobno povezani 
+
+Testovi se moraju moći pokrenuti više puta. 
+
+ 
+
+Rješenje može biti u bilo kojem programskom jeziku, ali odabir jezika nije izgovor za odstupanje od odabrane (kvalitetno izvedene!) arhitekture.  

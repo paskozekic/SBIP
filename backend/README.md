@@ -9,7 +9,7 @@ Slojevi u `src/`:
 | `presentation/` | Fastify rute (`routes.ts`, `*Routes.ts`) |
 | `application/` | Servisi (`*Service.ts`) — poslovna pravila |
 | `infrastructure/` | `pool.ts`, repozitoriji (SQL) |
-| `domain/` | Tipovi, uključujući **DTO** za JSON (`narudzbaDto.ts`, …) |
+| `domain/` | Tipovi, uključujući **DTO** za JSON (`narudzbaDto.ts`, `kategorija.ts`, …) |
 
 ## Priprema
 
@@ -35,6 +35,12 @@ API sluša na **http://localhost:3000** (ili `PORT` iz `.env`).
 | Metoda | Put | Opis |
 |--------|-----|------|
 | GET | `/api/health` | Provjera da API radi |
+| GET | `/api/kategorije?q=` | Lista kategorija, opcijski filter po nazivu |
+| GET | `/api/kategorije/za-odabir` | Kratki popis za dropdown |
+| GET | `/api/kategorije/:id` | Jedna kategorija |
+| POST | `/api/kategorije` | JSON `{ "naziv", "opis?" }` |
+| PUT | `/api/kategorije/:id` | Ažuriranje |
+| DELETE | `/api/kategorije/:id` | Brisanje (409 ako postoje bicikli) |
 | GET | `/api/narudzbe` | Lista narudžbi (JOIN: **ime i prezime kupca**) |
 | GET | `/api/narudzbe/:id` | **Master–detail:** zaglavlje + `stavke[]` + imena kupca i djelatnika |
 | POST | `/api/narudzbe` | Nova narudžba — `{ "status", "kupac_korisnik_id", "djelatnik_korisnik_id?" }` |

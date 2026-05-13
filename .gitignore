@@ -1,2 +1,3 @@
-mateirjali/
 .env
+node_modules/
+backend/dist/
