@@ -1,27 +1,51 @@
-# SPIB – backend
+# SPIB – backend (Faza B)
 
-Slojevita arhitektura za DZ3 (prezentacija → aplikacija → domena → infrastruktura). **Jezik i framework** (npr. ASP.NET Core, Node/Nest, Python/FastAPI) odaberite u timu; ova mapa daje **fiksnu podjelu odgovornosti** koju mapirate na projekte ili pakete u odabranom stacku.
+**Stack:** Node.js **20+**, **TypeScript**, **Fastify 5**, **pg** (PostgreSQL).
 
-## Struktura mapa
+Slojevi u `src/`:
 
-| Mapa | Uloga |
-|------|--------|
-| `src/presentation` | HTTP API (rute, kontroleri), DTO zahtjev/odgovor, validacija na rubu. Ne sadrži SQL. |
-| `src/application` | Servisi, poslovna pravila, orkestracija. Ovisi o sučeljima repozitorija (definirana u aplikaciji ili domeni). |
-| `src/domain` | Entiteti, vrijednosni objekti, pravila koja ne ovise o bazi ni o HTTP-u. |
-| `src/infrastructure` | Implementacija pristupa podacima (ADO, EF, Dapper, pg klijent …), mapiranje tablica → modele. |
-| `tests/unit` | Jedinični testovi (servisi s mock repozitorijem, domena …). |
-| `tests/integration` | Testovi protiv baze ili cijelog API-ja (slojevi povezani). |
+| Mapa | Sadržaj |
+|------|---------|
+| `presentation/` | Fastify rute (`routes.ts`, `*Routes.ts`) |
+| `application/` | Servisi (`*Service.ts`) — poslovna pravila |
+| `infrastructure/` | `pool.ts`, repozitoriji (SQL) |
+| `domain/` | Tipovi, uključujući **DTO** za JSON (`narudzbaDto.ts`, …) |
 
-## Veza s bazom
+## Priprema
 
-- Lokalno: [`../database/README.md`](../database/README.md) ili Docker: [`../README.md`](../README.md) (PostgreSQL u `docker-compose`).
-- Connection string (kad dodate API), primjer: `Host=localhost;Port=5432;Database=spib;Username=spib;Password=<iz .env>`.
+```powershell
+cd backend
+copy .env.example .env
+# prilagodi DATABASE_URL ako treba
+npm install
+```
 
-## Sljedeći korak u implementaciji
+Baza mora biti podignuta (`docker compose` iz korijena repozitorija ili lokalni PostgreSQL + `database/SPIB_*.sql`).
 
-1. Inicijalizirajte rješenje u ovoj mapi (npr. `dotnet new`, `npm init` u podmapi `src/SPIB.Api` — kako god vam odgovara).
-2. Mapirajte **presentation** na projekt koji pokreće web poslužitelj.
-3. Držite **SQL** i klijent biblioteku u **infrastructure**.
+## Pokretanje
 
-Kad dodate prvi stvarni projekt, ažurirajte ovaj README s točnim naredbama (`dotnet run`, `npm run start`, …).
+```powershell
+npm run dev
+```
+
+API sluša na **http://localhost:3000** (ili `PORT` iz `.env`).
+
+## Rute (inicialni skup)
+
+| Metoda | Put | Opis |
+|--------|-----|------|
+| GET | `/api/health` | Provjera da API radi |
+| GET | `/api/narudzbe` | Lista narudžbi (JOIN: **ime i prezime kupca**) |
+| GET | `/api/narudzbe/:id` | **Master–detail:** zaglavlje + `stavke[]` + imena kupca i djelatnika |
+| POST | `/api/narudzbe` | Nova narudžba — `{ "status", "kupac_korisnik_id", "djelatnik_korisnik_id?" }` |
+| PATCH | `/api/narudzbe/:id` | Ažuriranje zaglavlja — `{ "status?", "djelatnik_korisnik_id?" }` |
+| POST | `/api/narudzbe/:id/stavke` | Nova stavka — `{ "bicikl_id", "kolicina" }`; **cijena** iz kataloga; validacija **zalihe** |
+| PATCH | `/api/narudzbe/:id/stavke/:stavkaId` | Izmjena stavke; cijena ponovno iz kataloga |
+| DELETE | `/api/narudzbe/:id/stavke/:stavkaId` | Brisanje stavke; odgovor = cijeli detalj narudžbe |
+
+## Ostalo
+
+- **Build:** `npm run build` → `dist/`, pokretanje `npm start`
+- **Typecheck:** `npm run typecheck`
+
+Sljedeći koraci za DZ3: **Vitest** u `tests/`, UI master–detail na frontendu.

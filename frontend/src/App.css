@@ -1,0 +1,61 @@
+.spib {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 2rem 1.25rem;
+  font-family: system-ui, sans-serif;
+  line-height: 1.5;
+  color: #1a1a1a;
+}
+
+header h1 {
+  margin: 0;
+  font-size: 1.75rem;
+}
+
+.podnaslov {
+  margin: 0.25rem 0 1.5rem;
+  color: #555;
+  font-size: 0.95rem;
+}
+
+section {
+  margin-bottom: 2rem;
+}
+
+section h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.1rem;
+}
+
+.hint {
+  margin: 0 0 0.75rem;
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.status code,
+.hint code {
+  background: #f0f0f0;
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+  font-size: 0.9em;
+}
+
+.greska {
+  color: #b00020;
+  font-size: 0.9rem;
+}
+
+.lista {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.lista .naziv {
+  font-weight: 600;
+}
+
+.lista .opis {
+  color: #555;
+  font-weight: normal;
+}

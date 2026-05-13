@@ -1,6 +1,6 @@
 # SPIB – Sustav za prodaju i iznajmljivanje bicikala
 
-Studentski projekt (FER, informacijski sustavi).
+Studentski projekt (FER, informacijski sustavi). **Stack:** React + TypeScript (Vite) na frontendu, Node + TypeScript (Fastify) na backendu, PostgreSQL.
 
 ## DZ3 – pragmatičan dogovor
 
@@ -14,7 +14,7 @@ Studentski projekt (FER, informacijski sustavi).
 - **Implementacija (ti):** cijeli tehnički opseg DZ3 (backend, UI, baza po potrebi), commit na **`develop`** (ili kratka `feature/*` pa merge).
 - **Testiranje (kolega):** nakon što pushaš, javi **hash commita** ili **PR na `develop`**. On lokalno: `git pull`, `git config core.hooksPath .githooks` (jednom), `docker compose up -d`, zatim ručno ili Cursorom provjerava što si naveo u commit poruci / kratkom popisu u chatu ili issueu.
 
-**Praktično:** u poruci commita ili u GitHub **Issue / komentar na PR** napiši 3–6 točaka „što testirati“ (npr. „GET /api/kategorije“, „kreiraj narudžbu s dvije stavke“). Tako Cursor i kolega znaju točno opseg QA-a za tu isporuku.
+**Praktično:** u poruci commita ili u GitHub **Issue / komentar na PR** napiši 3–6 točaka „što testirati“ (npr. „GET /api/narudzbe/1“, „kreiraj narudžbu s dvije stavke“). Tako Cursor i kolega znaju točno opseg QA-a za tu isporuku.
 
 ## Git hookovi (bez `Co-authored-by: Cursor` u commit porukama)
 
@@ -49,8 +49,30 @@ Kontejner `spib-postgres` podiže PostgreSQL 16; pri **prvom** stvaranju praznog
 
 ## Backend (DZ3)
 
-Slojevita struktura i opis mapa: [`backend/README.md`](backend/README.md).
+**Node.js + TypeScript + Fastify** — vidi [`backend/README.md`](backend/README.md).
+
+```powershell
+cd backend
+copy .env.example .env
+npm install
+npm run dev
+```
+
+API: **http://localhost:3000** (`/api/health`, `/api/narudzbe`, …).
+
+## Frontend (React + TypeScript)
+
+**Vite + React 19 + TypeScript** u mapi **`frontend/`**. U dev modu **proxy** šalje `/api/*` na backend (`localhost:3000`).
+
+```powershell
+cd frontend
+npm install
+npm run dev
+```
+
+Sučelje: **http://localhost:5173** — u dva terminala pokreni **backend** pa **frontend**.
 
 ## Dokumentacija
 
-- [`docs/DZ3_FazaB_backend_obrazlozenje.md`](docs/DZ3_FazaB_backend_obrazlozenje.md) – Faza B, backend (narudžba + kategorije)
+- [`docs/qa/README.md`](docs/qa/README.md) — QA upute za **§2 narudžba** (Faza B)
+- [`docs/DZ3_FazaB_backend_obrazlozenje.md`](docs/DZ3_FazaB_backend_obrazlozenje.md) — Faza B, backend (cijeli plan; u ovom commitu implementirana je **§2**)
