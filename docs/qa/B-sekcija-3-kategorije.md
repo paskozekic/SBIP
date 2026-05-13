@@ -9,6 +9,7 @@
 | GET | `/api/kategorije/:id` |
 | POST | `/api/kategorije` |
 | PUT | `/api/kategorije/:id` |
+| PATCH | `/api/kategorije/:id` |
 | DELETE | `/api/kategorije/:id` |
 
 ---
@@ -27,12 +28,13 @@ $body = @{ naziv = "QA-test-kat"; opis = "privremeno" } | ConvertTo-Json
 Invoke-RestMethod http://localhost:3000/api/kategorije -Method POST -Body $body -ContentType "application/json"
 ```
 
-**Izmjena:**
+**Izmjena** (`PUT` ili `PATCH` — isto tijelo):
 
 ```powershell
 $id = 6   # id novokreirane
 $body = @{ naziv = "QA-test-kat2"; opis = "uredeno" } | ConvertTo-Json
 Invoke-RestMethod "http://localhost:3000/api/kategorije/$id" -Method PUT -Body $body -ContentType "application/json"
+# ili: -Method PATCH
 ```
 
 ---
@@ -66,6 +68,6 @@ Invoke-RestMethod http://localhost:3000/api/kategorije/za-odabir
 ## Kriterij „§3 OK“
 
 - [ ] Pretraga `?q=` vraća podskup  
-- [ ] POST / PUT / GET / DELETE ponašaju se očekivano  
+- [ ] POST / PUT / **PATCH** / GET / DELETE ponašaju se očekivano  
 - [ ] DELETE zaštićen ako postoje bicikli (**409**)  
 - [ ] `/za-odabir` vraća skraćeni JSON  

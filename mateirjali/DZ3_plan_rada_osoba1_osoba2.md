@@ -11,7 +11,7 @@ Ovaj dokument sadrži **komentar na bazu**, **tko što radi u timu** i **što je
 | Faza | Stanje | Napomena |
 |------|--------|----------|
 | **A** – priprema | **Gotovo** | `database/` (schema + seed), `docker-compose.yml`, korijenski `README`, `.env.example`, skeleton `backend/` prije API-ja. |
-| **B** – backend jezgra | **Gotovo** | Na `develop` logički u **dva commita**: (1) §2 narudžba + stavke — DTO, repozitorij, servis (zaliha, cijena iz kataloga), REST; (2) §3 kategorije — CRUD, `?q=` pretraga, `GET .../za-odabir`, zaštita brisanja ako postoje bicikli. Rute u **`backend/README.md`**. |
+| **B** – backend jezgra | **Gotovo i zatvoreno** | DTO/repo/servis/REST za §2 narudžba + §3 kategorije; `PUT` i **`PATCH`** na kategoriju; **`backend/README.md`** — tablica ruta + **primjeri JSON** + napomena **400** / **409**. Kontrolna lista u `docs/DZ3_FazaB_backend_obrazlozenje.md` §5 označena kao ispunjena. |
 | **C** – frontend | **Djelomično** | Vite + React + TS: **`/api/health`** i **lista kategorija** s `GET /api/kategorije` (jedna stranica). **Nema** još zaslona master–detail za narudžbu, nema forme/tablice za CRUD kategorija niti zajedničkog layouta/menija. |
 | **D** – testovi u kodu | **Nije započeto** | Mape `backend/tests/**` postoje s `.gitkeep`; **Vitest** i stvarni testovi planirani u `backend/README.md` („Sljedeći koraci“). |
 | **E** – dokumentacija / isporuka | **Djelomično** | README + `docs/DZ3_FazaB_backend_obrazlozenje.md` + `docs/qa/` (Faza A/B, §2.1–2.4, §3). **Nema** još PDF-a predmeta niti screenshotova kompletnog UI-ja. |
@@ -79,9 +79,11 @@ Popis API ruta: **`backend/README.md`**. Što ručno provjeriti: **`docs/qa/`** 
 
 **Šifrarnik kategorija** — *gotovo*
 
-- Model/DTO, repozitorij + servis (lista, `ILIKE` pretraga, CRUD, blokada brisanja ako postoje bicikli), REST uključujući **`GET /api/kategorije/za-odabir`**.
+- Model/DTO, repozitorij + servis (lista, `ILIKE` pretraga, CRUD, blokada brisanja ako postoje bicikli), REST uključujući **`GET /api/kategorije/za-odabir`**, **`PUT` i `PATCH`** na `/api/kategorije/:id`.
 
-**Točka spajanja (plan):** oba CRUD-a kroz API + README — **ispunjeno**; push na `develop`.
+**Točka spajanja (plan):** oba CRUD-a kroz API + README (uključujući primjere JSON) — **ispunjeno**; push na `develop`.
+
+> **Zatvaranje Faze B (backend):** implementacija i dokumentacija su usklađene s DZ3 §4–§5; ručni QA ostaje u `docs/qa/`.
 
 ---
 

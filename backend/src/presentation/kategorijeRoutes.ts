@@ -1,7 +1,33 @@
-import type { FastifyInstance } from "fastify";
+import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { KategorijaService } from "../application/kategorijaService.js";
 
 const service = new KategorijaService();
+
+type KategorijaUpdateBody = { naziv?: string; opis?: string | null };
+
+async function handleKategorijaUpdate(
+  request: FastifyRequest<{ Params: { id: string }; Body: KategorijaUpdateBody }>,
+  reply: FastifyReply,
+): Promise<unknown> {
+  const id = Number(request.params.id);
+  if (!Number.isFinite(id)) {
+    return reply.code(400).send({ error: "Nevaljan id" });
+  }
+  try {
+    const updated = await service.update(id, {
+      naziv: request.body?.naziv ?? "",
+      opis: request.body?.opis,
+    });
+    if (!updated) return reply.code(404).send({ error: "Kategorija nije pronađena" });
+    return updated;
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "Greška";
+    if (msg.startsWith("VALIDATION:")) {
+      return reply.code(400).send({ error: msg.replace("VALIDATION:", "").trim() });
+    }
+    throw e;
+  }
+}
 
 export async function registerKategorijeRoutes(app: FastifyInstance): Promise<void> {
   app.get("/kategorije", async (request) => {
@@ -43,28 +69,13 @@ export async function registerKategorijeRoutes(app: FastifyInstance): Promise<vo
     }
   });
 
-  app.put<{ Params: { id: string }; Body: { naziv?: string; opis?: string | null } }>(
+  app.put<{ Params: { id: string }; Body: KategorijaUpdateBody }>(
     "/kategorije/:id",
-    async (request, reply) => {
-      const id = Number(request.params.id);
-      if (!Number.isFinite(id)) {
-        return reply.code(400).send({ error: "Nevaljan id" });
-      }
-      try {
-        const updated = await service.update(id, {
-          naziv: request.body?.naziv ?? "",
-          opis: request.body?.opis,
-        });
-        if (!updated) return reply.code(404).send({ error: "Kategorija nije pronađena" });
-        return updated;
-      } catch (e) {
-        const msg = e instanceof Error ? e.message : "Greška";
-        if (msg.startsWith("VALIDATION:")) {
-          return reply.code(400).send({ error: msg.replace("VALIDATION:", "").trim() });
-        }
-        throw e;
-      }
-    },
+    handleKategorijaUpdate,
+  );
+  app.patch<{ Params: { id: string }; Body: KategorijaUpdateBody }>(
+    "/kategorije/:id",
+    handleKategorijaUpdate,
   );
 
   app.delete<{ Params: { id: string } }>("/kategorije/:id", async (request, reply) => {

@@ -49,3 +49,7 @@ Invoke-RestMethod -Uri http://localhost:3000/api/kategorije
 - [ ] `GET /api/kategorije` vraća niz kategorija  
 
 Detaljne provjere po podpoglavljima: **2.1–2.4** i **§3** u susjednim datotekama u ovoj mapi.
+
+## Zatvaranje Faze B (backend)
+
+Kad su gornji „okolina OK“ koraci prošli i po želji dodatne provjere iz `B-sekcija-*.md`, **backend Faza B** smatra se zatvorenom — sljedeći veći korak u planu je **Faza C** (UI) i **Faza D** (Vitest).

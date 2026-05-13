@@ -3,7 +3,7 @@
 Ovaj folder sadrži **korak-po-korak** što provjeriti nakon `git pull` na grani **`develop`**.  
 **Dogovor u timu:** **Osoba 2** (kolega) radi **samo ovo ručno testiranje**; sav kod, baza i dokumentacija u repou — **Osoba 1**.
 
-Glavna tehnička dokumentacija zadatka: [`../DZ3_FazaB_backend_obrazlozenje.md`](../DZ3_FazaB_backend_obrazlozenje.md).
+Glavna tehnička dokumentacija zadatka: [`../DZ3_FazaB_backend_obrazlozenje.md`](../DZ3_FazaB_backend_obrazlozenje.md). **Backend Faza B** (§2 + §3) smatra se zatvorenom: popis ruta, primjeri JSON tijela i **400** / **409** — u [`../../backend/README.md`](../../backend/README.md).
 
 ## Brzi start
 

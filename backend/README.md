@@ -39,7 +39,8 @@ API sluša na **http://localhost:3000** (ili `PORT` iz `.env`).
 | GET | `/api/kategorije/za-odabir` | Kratki popis za dropdown |
 | GET | `/api/kategorije/:id` | Jedna kategorija |
 | POST | `/api/kategorije` | JSON `{ "naziv", "opis?" }` |
-| PUT | `/api/kategorije/:id` | Ažuriranje |
+| PUT | `/api/kategorije/:id` | Ažuriranje (isto tijelo kao **PATCH**) |
+| PATCH | `/api/kategorije/:id` | Ažuriranje (isto kao PUT) |
 | DELETE | `/api/kategorije/:id` | Brisanje (409 ako postoje bicikli) |
 | GET | `/api/narudzbe` | Lista narudžbi (JOIN: **ime i prezime kupca**) |
 | GET | `/api/narudzbe/:id` | **Master–detail:** zaglavlje + `stavke[]` + imena kupca i djelatnika |
@@ -49,7 +50,39 @@ API sluša na **http://localhost:3000** (ili `PORT` iz `.env`).
 | PATCH | `/api/narudzbe/:id/stavke/:stavkaId` | Izmjena stavke; cijena ponovno iz kataloga |
 | DELETE | `/api/narudzbe/:id/stavke/:stavkaId` | Brisanje stavke; odgovor = cijeli detalj narudžbe |
 
-## Ostalo
+## Primjeri JSON tijela (za Postman / `irm`)
+
+**Nova narudžba**
+
+```json
+{ "status": "NOVA", "kupac_korisnik_id": 1, "djelatnik_korisnik_id": 3 }
+```
+
+**Ažuriranje zaglavlja narudžbe** (`PATCH /api/narudzbe/1`)
+
+```json
+{ "status": "U_OBRADI", "djelatnik_korisnik_id": 3 }
+```
+
+**Nova stavka** (`POST /api/narudzbe/1/stavke`) — `cijena` se ne šalje; backend ju uzima iz kataloga.
+
+```json
+{ "bicikl_id": 2, "kolicina": 1 }
+```
+
+**Nova kategorija** (`POST /api/kategorije`)
+
+```json
+{ "naziv": "Sklopivi", "opis": "Bicikli za prijevoz." }
+```
+
+**Ažuriranje kategorije** (`PUT` ili `PATCH /api/kategorije/1`)
+
+```json
+{ "naziv": "Gradski", "opis": "Ažurirani opis." }
+```
+
+**Greške:** validacija narudžbe/stavki → **400** s `{ "error": "..." }`. Brisanje kategorije s povezanim biciklima → **409**.
 
 - **Build:** `npm run build` → `dist/`, pokretanje `npm start`
 - **Typecheck:** `npm run typecheck`

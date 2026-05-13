@@ -136,7 +136,7 @@ Kada:
 - Osoba 1 ima funkcionalan CRUD narudžbe + stavki kroz API, i
 - Osoba 2 ima funkcionalan CRUD kategorija + pretragu + dropdown listu,
 
-…radite **merge u zajedničku granu** (`develop`), ažurirate **README** s popisom ruta i kratkim primjerima JSON-a, te provjerite oba tijeka u Postmanu.
+…radite **merge u zajedničku granu** (`develop`), ažurirate **README** s popisom ruta i kratkim primjerima JSON-a, te provjerite oba tijeka u Postmanu ili **PowerShellu** (`Invoke-RestMethod` / `irm`).
 
 ---
 
@@ -144,17 +144,17 @@ Kada:
 
 **Osoba 1**
 
-- [ ] DTO / modeli za narudžbu i stavku  
-- [ ] Repozitorij: detalj s stavkama, CRUD zaglavlja i stavki  
-- [ ] Servis: barem jedno **složenije** poslovno pravilo  
-- [ ] REST rute dokumentirane i isprobane  
+- [x] DTO / modeli za narudžbu i stavku  
+- [x] Repozitorij: detalj s stavkama, CRUD zaglavlja i stavki  
+- [x] Servis: barem jedno **složenije** poslovno pravilo  
+- [x] REST rute dokumentirane i isprobane  
 
 **Osoba 2**
 
-- [ ] DTO / modeli za kategoriju  
-- [ ] Repozitorij + servis: lista, pretraga, CRUD, zaštita brisanja ako treba  
-- [ ] REST rute + odgovor pogodan za **dropdown**  
-- [ ] README ili kontrakt API-ja ažuriran  
+- [x] DTO / modeli za kategoriju  
+- [x] Repozitorij + servis: lista, pretraga, CRUD, zaštita brisanja ako treba  
+- [x] REST rute + odgovor pogodan za **dropdown**  
+- [x] README ili kontrakt API-ja ažuriran  
 
 ---
 
