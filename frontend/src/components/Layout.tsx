@@ -6,7 +6,7 @@ export default function Layout() {
       <header className="spib-header">
         <div className="spib-header-card">
           <h1>SPIB</h1>
-          <p className="podnaslov">Sustav za prodaju i iznajmljivanje bicikala — Faza C</p>
+          <p className="podnaslov">Upravljanje narudžbama i katalogom — sve na jednom mjestu</p>
         </div>
       </header>
       <nav className="nav-glava" aria-label="Glavna navigacija">

@@ -28,7 +28,7 @@ Otvori **http://localhost:5173**.
 
 | Ruta | Sadržaj |
 |------|---------|
-| `/` | Smoke: `/api/health` |
+| `/` | Početna — dobrodošlica i brzi pristup Narudžbama / Kategorijama |
 | `/narudzbe` | Master–detail narudžbe, CRUD stavki, nova narudžba |
 | `/kategorije` | Šifrarnik: pretraga, tablica, CRUD |
 

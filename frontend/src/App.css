@@ -425,3 +425,58 @@
 .kategorije-page > h2 {
   margin-bottom: 0.5rem;
 }
+
+/* Početna */
+.pocetna-uvod {
+  max-width: 36rem;
+  margin: 0 0 1.75rem;
+  font-size: 1rem;
+  color: var(--spib-muted);
+  line-height: 1.6;
+}
+
+.pocetna-kartice {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+.pocetna-karta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1.25rem 1.35rem;
+  text-decoration: none;
+  color: inherit;
+  background: var(--spib-surface);
+  border: 1px solid var(--spib-border);
+  border-radius: var(--spib-radius);
+  box-shadow: var(--spib-shadow);
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.12s ease;
+}
+
+.pocetna-karta:hover {
+  border-color: var(--spib-brand);
+  box-shadow: 0 8px 28px rgba(13, 107, 74, 0.12);
+  transform: translateY(-2px);
+}
+
+.pocetna-karta:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--spib-brand-soft);
+}
+
+.pocetna-karta__naslov {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--spib-brand);
+}
+
+.pocetna-karta__opis {
+  font-size: 0.9rem;
+  color: var(--spib-muted);
+  line-height: 1.45;
+}

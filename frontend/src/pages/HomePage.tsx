@@ -1,35 +1,24 @@
-import { useEffect, useState } from "react";
-import { ApiError, apiJson } from "../lib/api";
+import { Link } from "react-router-dom";
 
 export default function HomePage() {
-  const [health, setHealth] = useState<string>("…");
-  const [greska, setGreska] = useState<string | null>(null);
-
-  useEffect(() => {
-    let o = false;
-    (async () => {
-      try {
-        const j = await apiJson<{ status: string }>("/api/health");
-        if (!o) setHealth(j.status);
-      } catch (e) {
-        if (!o) setGreska(e instanceof ApiError ? e.message : "Greška mreže");
-      }
-    })();
-    return () => {
-      o = true;
-    };
-  }, []);
-
   return (
-    <section>
-      <h2>Dobrodošli</h2>
-      <p className="hint">
-        Backend: <code>/api/health</code> → <strong>{health}</strong>
+    <section className="pocetna">
+      <h2>Dobro došli</h2>
+      <p className="pocetna-uvod">
+        Ovdje možete voditi narudžbe kupaca i održavati vrste bicikala u katalogu. Odaberite što želite raditi —
+        sve je dostupno i iz izbornika gore.
       </p>
-      {greska && <p className="greska">{greska}</p>}
-      <p>
-        Odaberi <strong>Narudžbe</strong> za master–detail ili <strong>Kategorije</strong> za šifrarnik.
-      </p>
+
+      <div className="pocetna-kartice">
+        <Link to="/narudzbe" className="pocetna-karta">
+          <span className="pocetna-karta__naslov">Narudžbe</span>
+          <span className="pocetna-karta__opis">Pregledajte narudžbe, dodajte nove ili uredite stavke.</span>
+        </Link>
+        <Link to="/kategorije" className="pocetna-karta">
+          <span className="pocetna-karta__naslov">Kategorije bicikla</span>
+          <span className="pocetna-karta__opis">Dodajte, pretražite ili izmijenite kategorije u katalogu.</span>
+        </Link>
+      </div>
     </section>
   );
 }
