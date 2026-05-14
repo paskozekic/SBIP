@@ -1,4 +1,5 @@
 import type { FastifyInstance } from "fastify";
+import { registerAdminRoutes } from "./adminRoutes.js";
 import { registerAuthRoutes } from "./authRoutes.js";
 import { registerBiciklRoutes } from "./biciklRoutes.js";
 import { registerIzvjestajiRoutes } from "./izvjestajiRoutes.js";
@@ -11,6 +12,7 @@ export async function registerApiRoutes(app: FastifyInstance): Promise<void> {
   app.get("/health", async () => ({ status: "ok", service: "spib-backend" }));
 
   await app.register(registerAuthRoutes);
+  await app.register(registerAdminRoutes);
   await app.register(registerBiciklRoutes);
   await app.register(registerNajamRoutes);
   await app.register(registerIzvjestajiRoutes);

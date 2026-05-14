@@ -1,4 +1,5 @@
 import bcrypt from "bcrypt";
+import type { UserRole } from "../domain/userRole.js";
 import { signAccessToken } from "../lib/jwt.js";
 import { KorisnikRepository } from "../infrastructure/korisnikRepository.js";
 
@@ -35,7 +36,7 @@ export class AuthService {
   async login(body: { email: string; lozinka: string }): Promise<{
     token: string;
     korisnik_id: number;
-    role: "kupac" | "djelatnik";
+    role: UserRole;
   }> {
     const email = body.email?.trim();
     const lozinka = body.lozinka ?? "";
@@ -48,9 +49,9 @@ export class AuthService {
     return { token, korisnik_id: row.korisnik_id, role: row.uloga };
   }
 
-  async me(korisnikId: number, role: "kupac" | "djelatnik"): Promise<{
+  async me(korisnikId: number, role: UserRole): Promise<{
     korisnik_id: number;
-    role: "kupac" | "djelatnik";
+    role: UserRole;
     ime: string;
     prezime: string;
     email: string;

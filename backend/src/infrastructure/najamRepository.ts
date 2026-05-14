@@ -6,7 +6,7 @@ export type NajamRowDb = {
   datum_zavrsetka: string;
   status_najma: string;
   ukupna_cijena: string;
-  bicikl_id: number;
+  jedinica_id: number;
   bicikl_naziv: string | null;
   kupac_korisnik_id: number;
   kupac_ime: string | null;
@@ -19,12 +19,12 @@ export class NajamRepository {
     datum_zavrsetka: string;
     status_najma: string;
     ukupna_cijena: string;
-    bicikl_id: number;
+    jedinica_id: number;
     djelatnik_korisnik_id: number | null;
     kupac_korisnik_id: number;
   }): Promise<number> {
     const res = await pool.query<{ najam_id: number }>(
-      `INSERT INTO najam (datum_pocetka, datum_zavrsetka, status_najma, ukupna_cijena, bicikl_id, djelatnik_korisnik_id, kupac_korisnik_id)
+      `INSERT INTO najam (datum_pocetka, datum_zavrsetka, status_najma, ukupna_cijena, jedinica_id, djelatnik_korisnik_id, kupac_korisnik_id)
        VALUES ($1::date, $2::date, $3, $4, $5, $6, $7)
        RETURNING najam_id`,
       [
@@ -32,7 +32,7 @@ export class NajamRepository {
         row.datum_zavrsetka,
         row.status_najma,
         row.ukupna_cijena,
-        row.bicikl_id,
+        row.jedinica_id,
         row.djelatnik_korisnik_id,
         row.kupac_korisnik_id,
       ],
@@ -47,13 +47,14 @@ export class NajamRepository {
               n.datum_zavrsetka::text AS datum_zavrsetka,
               n.status_najma,
               n.ukupna_cijena::text AS ukupna_cijena,
-              n.bicikl_id,
+              n.jedinica_id,
               b.naziv AS bicikl_naziv,
               n.kupac_korisnik_id,
               k.ime AS kupac_ime,
               k.prezime AS kupac_prezime
        FROM najam n
-       JOIN bicikl b ON b.bicikl_id = n.bicikl_id
+       JOIN bicikl_jedinica j ON j.jedinica_id = n.jedinica_id
+       JOIN bicikl b ON b.bicikl_id = j.bicikl_id
        JOIN kupac ku ON ku.korisnik_id = n.kupac_korisnik_id
        JOIN korisnik k ON k.korisnik_id = ku.korisnik_id
        ORDER BY n.datum_pocetka DESC`,
@@ -68,13 +69,14 @@ export class NajamRepository {
               n.datum_zavrsetka::text AS datum_zavrsetka,
               n.status_najma,
               n.ukupna_cijena::text AS ukupna_cijena,
-              n.bicikl_id,
+              n.jedinica_id,
               b.naziv AS bicikl_naziv,
               n.kupac_korisnik_id,
               k.ime AS kupac_ime,
               k.prezime AS kupac_prezime
        FROM najam n
-       JOIN bicikl b ON b.bicikl_id = n.bicikl_id
+       JOIN bicikl_jedinica j ON j.jedinica_id = n.jedinica_id
+       JOIN bicikl b ON b.bicikl_id = j.bicikl_id
        JOIN kupac ku ON ku.korisnik_id = n.kupac_korisnik_id
        JOIN korisnik k ON k.korisnik_id = ku.korisnik_id
        WHERE n.najam_id = $1`,
@@ -83,15 +85,15 @@ export class NajamRepository {
     return res.rows[0] ?? null;
   }
 
-  async countAktivanOverlap(biciklId: number, od: string, doDat: string, excludeNajamId?: number): Promise<number> {
+  async countAktivanOverlap(jedinicaId: number, od: string, doDat: string, excludeNajamId?: number): Promise<number> {
     const res = await pool.query<{ c: string }>(
       `SELECT count(*)::text AS c
        FROM najam
-       WHERE bicikl_id = $1
+       WHERE jedinica_id = $1
          AND status_najma = 'AKTIVAN'
          AND ($4::int IS NULL OR najam_id <> $4::int)
          AND daterange(datum_pocetka, datum_zavrsetka, '[]') && daterange($2::date, $3::date, '[]')`,
-      [biciklId, od, doDat, excludeNajamId ?? null],
+      [jedinicaId, od, doDat, excludeNajamId ?? null],
     );
     return Number(res.rows[0]?.c ?? 0);
   }
@@ -111,13 +113,14 @@ export class NajamRepository {
               n.datum_zavrsetka::text AS datum_zavrsetka,
               n.status_najma,
               n.ukupna_cijena::text AS ukupna_cijena,
-              n.bicikl_id,
+              n.jedinica_id,
               b.naziv AS bicikl_naziv,
               n.kupac_korisnik_id,
               k.ime AS kupac_ime,
               k.prezime AS kupac_prezime
        FROM najam n
-       JOIN bicikl b ON b.bicikl_id = n.bicikl_id
+       JOIN bicikl_jedinica j ON j.jedinica_id = n.jedinica_id
+       JOIN bicikl b ON b.bicikl_id = j.bicikl_id
        JOIN kupac ku ON ku.korisnik_id = n.kupac_korisnik_id
        JOIN korisnik k ON k.korisnik_id = ku.korisnik_id
        WHERE n.status_najma = 'AKTIVAN'

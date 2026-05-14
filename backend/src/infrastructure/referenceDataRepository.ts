@@ -24,13 +24,17 @@ export class ReferenceDataRepository {
 
   async listBicikli(): Promise<BiciklOption[]> {
     const res = await pool.query<BiciklOption>(
-      `SELECT bicikl_id,
-              naziv,
-              kolicina,
-              cijena::text AS cijena,
-              cijena_najma_po_danu::text AS cijena_najma_po_danu
-       FROM bicikl
-       ORDER BY naziv`,
+      `SELECT j.jedinica_id,
+              j.bicikl_id,
+              j.inventarni_broj,
+              b.naziv,
+              1 AS kolicina,
+              b.cijena::text AS cijena,
+              b.cijena_najma_po_danu::text AS cijena_najma_po_danu
+       FROM bicikl_jedinica j
+       JOIN bicikl b ON b.bicikl_id = j.bicikl_id
+       WHERE j.status = 'DOSTUPAN'
+       ORDER BY j.inventarni_broj`,
     );
     return res.rows;
   }

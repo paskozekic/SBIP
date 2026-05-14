@@ -18,9 +18,10 @@ function mapStavka(r: NarudzbaDetaljRow["stavke"][0]): StavkaNarudzbeDto {
     stavka_id: r.stavka_id,
     kolicina: r.kolicina,
     cijena: r.cijena,
-    bicikl_id: r.bicikl_id,
+    jedinica_id: r.jedinica_id,
     narudzba_id: r.narudzba_id,
     bicikl_naziv: r.bicikl_naziv,
+    bicikl_inventarni_broj: r.bicikl_inventarni_broj,
   };
 }
 
@@ -35,20 +36,28 @@ function mapListRow(r: NarudzbaListRow): NarudzbaListDto {
     kupac_ime: r.kupac_ime,
     kupac_prezime: r.kupac_prezime,
     djelatnik_korisnik_id: r.djelatnik_korisnik_id,
+    djelatnik_ime: r.djelatnik_ime ?? null,
+    djelatnik_prezime: r.djelatnik_prezime ?? null,
   };
 }
 
 function mapDetalj(r: NarudzbaDetaljRow): NarudzbaDetaljDto {
   return {
     ...mapListRow(r),
-    djelatnik_ime: r.djelatnik_ime,
-    djelatnik_prezime: r.djelatnik_prezime,
     stavke: r.stavke.map(mapStavka),
   };
 }
 
 export class NarudzbaService {
   constructor(private readonly repo = new NarudzbaRepository()) {}
+
+  private assertNijeAdministrator(auth: AuthUser): void {
+    if (auth.role === "administrator") {
+      const e = new Error("Administrator nema pristup modulu narudžbi.");
+      (e as Error & { statusCode: number }).statusCode = 403;
+      throw e;
+    }
+  }
 
   private assertNarudzbaPristup(n: NarudzbaDetaljRow, auth: AuthUser): void {
     if (auth.role === "djelatnik") return;
@@ -57,7 +66,21 @@ export class NarudzbaService {
     }
   }
 
+  /** Kupac ne smije mijenjati stavke; djelatnik također ne (obrada izvan ovog API-ja). */
+  private assertMijenjanjeStavkiZabranjeno(auth: AuthUser): never {
+    if (auth.role === "kupac") {
+      const e = new Error("Kupac ne smije mijenjati stavke narudžbe (samo pregled).");
+      (e as Error & { statusCode: number }).statusCode = 403;
+      throw e;
+    }
+    if (auth.role === "djelatnik") {
+      throw new Error("VALIDATION: djelatnik ne smije mijenjati stavke narudžbe");
+    }
+    throw new Error("INTERNAL: mijenjanje stavki nije dopušteno za ovu ulogu");
+  }
+
   async list(auth: AuthUser, limit?: number): Promise<NarudzbaListDto[]> {
+    this.assertNijeAdministrator(auth);
     const lim = limit ?? 50;
     const rows =
       auth.role === "kupac"
@@ -76,6 +99,7 @@ export class NarudzbaService {
   }
 
   async getById(id: number, auth: AuthUser): Promise<NarudzbaDetaljDto | null> {
+    this.assertNijeAdministrator(auth);
     const row = await this.repo.findByIdWithStavke(id);
     if (!row) return null;
     try {
@@ -87,6 +111,7 @@ export class NarudzbaService {
   }
 
   async create(body: NarudzbaCreateDto, auth: AuthUser): Promise<NarudzbaDetaljDto> {
+    this.assertNijeAdministrator(auth);
     const status = body.status?.trim();
     if (!status) throw new Error("VALIDATION: status je obavezan");
     assertNarudzbaStatus(status);
@@ -112,118 +137,130 @@ export class NarudzbaService {
     return mapDetalj(full);
   }
 
-  async update(id: number, body: NarudzbaUpdateDto, auth: AuthUser): Promise<NarudzbaDetaljDto | null> {
-    const cur = await this.repo.findByIdWithStavke(id);
-    if (!cur) return null;
-    this.assertNarudzbaPristup(cur, auth);
-    const patch: {
-      status?: string;
-      djelatnik_korisnik_id?: number | null;
-      adresa_dostave?: string;
-      nacin_placanja?: string;
-    } = {};
-    if (body.status !== undefined) {
-      const s = body.status.trim();
-      if (!s) throw new Error("VALIDATION: status ne smije biti prazan");
-      patch.status = assertNarudzbaStatus(s);
+  /** Kupac: jedna narudžba NOVA + jedna stavka u transakciji (adresa i način plaćanja). */
+  async kreirajKupnju(
+    auth: AuthUser,
+    body: { bicikl_id: unknown; kolicina: unknown; adresa_dostave: unknown; nacin_placanja: unknown },
+  ): Promise<NarudzbaDetaljDto> {
+    this.assertNijeAdministrator(auth);
+    if (auth.role !== "kupac") {
+      throw new Error("VALIDATION: kupnju može započeti samo kupac");
     }
-    if (body.djelatnik_korisnik_id !== undefined) {
-      patch.djelatnik_korisnik_id =
-        body.djelatnik_korisnik_id === null ? null : Number(body.djelatnik_korisnik_id);
-      if (patch.djelatnik_korisnik_id !== null && !Number.isFinite(patch.djelatnik_korisnik_id)) {
-        throw new Error("VALIDATION: nevaljan djelatnik_korisnik_id");
-      }
+    const biciklVrstaId = Number(body.bicikl_id);
+    const kol = Number(body.kolicina);
+    if (!Number.isFinite(biciklVrstaId) || biciklVrstaId <= 0) {
+      throw new Error("VALIDATION: nevaljan bicikl_id (vrsta)");
     }
-    if (body.adresa_dostave !== undefined) {
-      const a = body.adresa_dostave.trim();
-      if (!a) throw new Error("VALIDATION: adresa ne smije biti prazna");
-      patch.adresa_dostave = a;
+    if (!Number.isFinite(kol) || kol <= 0 || kol !== Math.floor(kol)) {
+      throw new Error("VALIDATION: količina mora biti pozitivni cijeli broj");
     }
-    if (body.nacin_placanja !== undefined) {
-      patch.nacin_placanja = assertNacinPlacanja(body.nacin_placanja);
+    const adresa = String(body.adresa_dostave ?? "").trim();
+    if (!adresa) throw new Error("VALIDATION: adresa dostave je obavezna");
+    const nacin = assertNacinPlacanja(String(body.nacin_placanja ?? ""));
+    const nid = await this.repo.insertKupnjaNarudzbaSaStavkom({
+      kupacKorisnikId: auth.korisnik_id,
+      adresaDostave: adresa,
+      nacinPlacanja: nacin,
+      biciklVrstaId,
+      kolicina: kol,
+    });
+    const full = await this.repo.findByIdWithStavke(nid);
+    if (!full) throw new Error("INTERNAL: narudžba nije učitana nakon kupnje");
+    return mapDetalj(full);
+  }
+
+  private assertKupacNeSmijeMijenjatiZaglavlje(auth: AuthUser): void {
+    if (auth.role === "kupac") {
+      const e = new Error("Zaglavlje narudžbe nije moguće mijenjati (samo pregled).");
+      (e as Error & { statusCode: number }).statusCode = 403;
+      throw e;
     }
-    if (Object.keys(patch).length === 0) {
+  }
+
+  /**
+   * Djelatnik smije potvrditi narudžbu: NOVA → POTVRDJENA, uz automatski zapis trenutnog djelatnika.
+   * U bazi se pri tom prvim prijelazu u Potvrđena knjiži prodaja (prodaja_obradena, datum_zavrsetka) za izvještaj.
+   */
+  private async updateZaglavljeDjelatnikPotvrda(
+    id: number,
+    cur: NarudzbaDetaljRow,
+    body: NarudzbaUpdateDto,
+    auth: AuthUser,
+  ): Promise<NarudzbaDetaljDto> {
+    if (body.adresa_dostave !== undefined || body.nacin_placanja !== undefined) {
+      throw new Error(
+        "VALIDATION: djelatnik ovim pozivom smije samo potvrditi narudžbu (status Nova → Potvrđena)",
+      );
+    }
+    if (body.status === undefined) {
+      throw new Error("VALIDATION: za potvrdu narudžbe pošaljite status POTVRDJENA");
+    }
+    const noviStatus = assertNarudzbaStatus(body.status.trim());
+    if (noviStatus !== "POTVRDJENA") {
+      throw new Error("VALIDATION: djelatnik smije postaviti samo status Potvrđena (iz Nove)");
+    }
+    if (cur.status === "POTVRDJENA") {
       return this.detaljIzRetka(cur);
     }
+    if (cur.status !== "NOVA") {
+      throw new Error("VALIDATION: potvrdu (Nova → Potvrđena) moguće je samo za narudžbu u statusu Nova");
+    }
+    const patch = { status: "POTVRDJENA" as const, djelatnik_korisnik_id: auth.korisnik_id };
     try {
       const ok = await this.repo.updateNarudzba(id, patch);
-      if (!ok) return null;
+      if (!ok) throw new Error("INTERNAL: narudžba nije ažurirana");
     } catch (e) {
       if (e instanceof Error && e.message.startsWith("VALIDATION:")) throw e;
       throw e;
     }
-    return this.detaljNakonPromjene(id);
+    const nakon = await this.detaljNakonPromjene(id);
+    if (!nakon) throw new Error("INTERNAL: narudžba nije učitana nakon ažuriranja");
+    return nakon;
   }
 
-  private async assertZalihaDovoljna(
-    narudzbaId: number,
-    biciklId: number,
-    novaKolicina: number,
-    excludeStavkaId?: number,
-  ): Promise<void> {
-    const bicikl = await this.repo.getBicikl(biciklId);
-    if (!bicikl) throw new Error("VALIDATION: bicikl ne postoji");
-    const vec = await this.repo.sumKolicinaZaBiciklUNarudzbi(narudzbaId, biciklId, excludeStavkaId);
-    if (vec + novaKolicina > bicikl.kolicina) {
-      throw new Error(
-        `VALIDATION: nema dovoljno zalihe (bicikl ${biciklId}, na zalihi ${bicikl.kolicina}, već u narudžbi ${vec}, traženo još ${novaKolicina})`,
-      );
+  async update(id: number, body: NarudzbaUpdateDto, auth: AuthUser): Promise<NarudzbaDetaljDto | null> {
+    this.assertNijeAdministrator(auth);
+    const cur = await this.repo.findByIdWithStavke(id);
+    if (!cur) return null;
+    this.assertNarudzbaPristup(cur, auth);
+
+    if (auth.role === "kupac") {
+      this.assertKupacNeSmijeMijenjatiZaglavlje(auth);
     }
+
+    if (auth.role === "djelatnik") {
+      return await this.updateZaglavljeDjelatnikPotvrda(id, cur, body, auth);
+    }
+
+    throw new Error("VALIDATION: ažuriranje zaglavlja nije podržano za ovu ulogu");
   }
 
-  async addStavka(narudzbaId: number, body: StavkaCreateDto, auth: AuthUser): Promise<NarudzbaDetaljDto | null> {
+  async addStavka(narudzbaId: number, _body: StavkaCreateDto, auth: AuthUser): Promise<NarudzbaDetaljDto | null> {
+    this.assertNijeAdministrator(auth);
     const nar = await this.repo.findByIdWithStavke(narudzbaId);
     if (!nar) return null;
     this.assertNarudzbaPristup(nar, auth);
-    const biciklId = Number(body.bicikl_id);
-    const kol = Number(body.kolicina);
-    if (!Number.isFinite(biciklId) || !Number.isFinite(kol) || kol <= 0) {
-      throw new Error("VALIDATION: bicikl_id i pozitivna kolicina su obavezni");
-    }
-    const bicikl = await this.repo.getBicikl(biciklId);
-    if (!bicikl) throw new Error("VALIDATION: bicikl ne postoji");
-
-    await this.assertZalihaDovoljna(narudzbaId, biciklId, kol);
-
-    await this.repo.insertStavka(narudzbaId, biciklId, kol, bicikl.cijena);
-    return this.detaljNakonPromjene(narudzbaId);
+    this.assertMijenjanjeStavkiZabranjeno(auth);
   }
 
   async updateStavka(
     narudzbaId: number,
-    stavkaId: number,
-    body: StavkaUpdateDto,
+    _stavkaId: number,
+    _body: StavkaUpdateDto,
     auth: AuthUser,
   ): Promise<NarudzbaDetaljDto | null> {
+    this.assertNijeAdministrator(auth);
     const nar = await this.repo.findByIdWithStavke(narudzbaId);
     if (!nar) return null;
     this.assertNarudzbaPristup(nar, auth);
-    const existing = await this.repo.getStavka(stavkaId, narudzbaId);
-    if (!existing) return null;
-
-    const biciklId = body.bicikl_id !== undefined ? Number(body.bicikl_id) : existing.bicikl_id;
-    const kol = body.kolicina !== undefined ? Number(body.kolicina) : existing.kolicina;
-
-    if (!Number.isFinite(biciklId) || !Number.isFinite(kol) || kol <= 0) {
-      throw new Error("VALIDATION: nevaljana količina ili bicikl");
-    }
-
-    const bicikl = await this.repo.getBicikl(biciklId);
-    if (!bicikl) throw new Error("VALIDATION: bicikl ne postoji");
-
-    await this.assertZalihaDovoljna(narudzbaId, biciklId, kol, stavkaId);
-
-    const row = await this.repo.updateStavka(stavkaId, narudzbaId, biciklId, kol, bicikl.cijena);
-    if (!row) return null;
-    return this.detaljNakonPromjene(narudzbaId);
+    this.assertMijenjanjeStavkiZabranjeno(auth);
   }
 
-  async removeStavka(narudzbaId: number, stavkaId: number, auth: AuthUser): Promise<NarudzbaDetaljDto | null> {
+  async removeStavka(narudzbaId: number, _stavkaId: number, auth: AuthUser): Promise<NarudzbaDetaljDto | null> {
+    this.assertNijeAdministrator(auth);
     const nar = await this.repo.findByIdWithStavke(narudzbaId);
     if (!nar) return null;
     this.assertNarudzbaPristup(nar, auth);
-    const ok = await this.repo.deleteStavka(stavkaId, narudzbaId);
-    if (!ok) return null;
-    return this.detaljNakonPromjene(narudzbaId);
+    this.assertMijenjanjeStavkiZabranjeno(auth);
   }
 }

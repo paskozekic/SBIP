@@ -33,6 +33,16 @@ export function requireDjelatnik(request: FastifyRequest): AuthUser {
   return u;
 }
 
+export function requireAdministrator(request: FastifyRequest): AuthUser {
+  const u = requireAuth(request);
+  if (u.role !== "administrator") {
+    const e = new Error("Samo administrator");
+    (e as Error & { statusCode: number }).statusCode = 403;
+    throw e;
+  }
+  return u;
+}
+
 export function requireKupac(request: FastifyRequest): AuthUser {
   const u = requireAuth(request);
   if (u.role !== "kupac") {
@@ -41,4 +51,14 @@ export function requireKupac(request: FastifyRequest): AuthUser {
     throw e;
   }
   return u;
+}
+
+/** Katalog (javni pregled) — administrator ne smije. */
+export function forbidAdministratorKatalog(request: FastifyRequest): void {
+  const u = tryAuthUser(request);
+  if (u?.role === "administrator") {
+    const e = new Error("Administrator nema pristup katalogu");
+    (e as Error & { statusCode: number }).statusCode = 403;
+    throw e;
+  }
 }

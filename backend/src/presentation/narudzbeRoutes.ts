@@ -1,9 +1,11 @@
 import type { FastifyInstance, FastifyReply } from "fastify";
 import { NarudzbaService } from "../application/narudzbaService.js";
 import { listaNarudzbaStatusaZaApi } from "../domain/narudzbaStatus.js";
-import { requireAuth } from "./requestAuth.js";
+import { requireAuth, requireKupac } from "./requestAuth.js";
 
-const service = new NarudzbaService();
+export type NarudzbeRoutesDeps = {
+  service?: NarudzbaService;
+};
 
 function validationReply(reply: FastifyReply, e: unknown): unknown | null {
   if (e instanceof Error && e.message.startsWith("VALIDATION:")) {
@@ -19,7 +21,11 @@ function authErr(reply: FastifyReply, e: unknown) {
   return reply.code(sc).send({ error: e instanceof Error ? e.message : "Neautorizirano" });
 }
 
-export async function registerNarudzbeRoutes(app: FastifyInstance): Promise<void> {
+export async function registerNarudzbeRoutes(
+  app: FastifyInstance,
+  deps: NarudzbeRoutesDeps = {},
+): Promise<void> {
+  const service = deps.service ?? new NarudzbaService();
   app.get("/narudzbe", async (request, reply) => {
     let auth;
     try {
@@ -35,37 +41,40 @@ export async function registerNarudzbeRoutes(app: FastifyInstance): Promise<void
 
   app.get("/narudzbe/statusi", async () => listaNarudzbaStatusaZaApi());
 
-  app.post<{ Body: Record<string, unknown> }>("/narudzbe", async (request, reply) => {
+  app.post<{ Body: Record<string, unknown> }>("/kupnja", async (request, reply) => {
     let auth;
     try {
-      auth = requireAuth(request);
+      auth = requireKupac(request);
     } catch (e) {
       return authErr(reply, e);
     }
-    const b = request.body as {
-      status?: string;
-      kupac_korisnik_id?: number;
-      djelatnik_korisnik_id?: number | null;
-      adresa_dostave?: string;
-      nacin_placanja?: string;
-    };
+    const b = request.body as Record<string, unknown>;
     try {
-      const created = await service.create(
-        {
-          status: b.status ?? "",
-          kupac_korisnik_id: Number(b.kupac_korisnik_id),
-          djelatnik_korisnik_id: b.djelatnik_korisnik_id,
-          adresa_dostave: String(b.adresa_dostave ?? ""),
-          nacin_placanja: String(b.nacin_placanja ?? "POUZEĆE"),
-        },
-        auth,
-      );
+      const created = await service.kreirajKupnju(auth, {
+        bicikl_id: b.bicikl_id,
+        kolicina: b.kolicina,
+        adresa_dostave: b.adresa_dostave,
+        nacin_placanja: b.nacin_placanja,
+      });
       return reply.code(201).send(created);
     } catch (e) {
       const v = validationReply(reply, e);
       if (v !== null) return v;
       throw e;
     }
+  });
+
+  /** Nova narudžba kupnje samo preko `POST /kupnja` (kupac + model + zaliha). Prazno zaglavlje nije dozvoljeno. */
+  app.post("/narudzbe", async (request, reply) => {
+    try {
+      requireAuth(request);
+    } catch (e) {
+      return authErr(reply, e);
+    }
+    return reply.code(403).send({
+      error:
+        "Narudžbu kupnje ne možete kreirati ovim pozivom. Koristite stranicu Kupnja (POST /api/kupnja).",
+    });
   });
 
   app.get<{ Params: { id: string } }>("/narudzbe/:id", async (request, reply) => {
@@ -115,6 +124,10 @@ export async function registerNarudzbeRoutes(app: FastifyInstance): Promise<void
       } catch (e) {
         const v = validationReply(reply, e);
         if (v !== null) return v;
+        const sc = (e as Error & { statusCode?: number }).statusCode;
+        if (sc === 403) {
+          return reply.code(403).send({ error: e instanceof Error ? e.message : "Zabranjeno" });
+        }
         throw e;
       }
     },
@@ -134,9 +147,9 @@ export async function registerNarudzbeRoutes(app: FastifyInstance): Promise<void
         return reply.code(400).send({ error: "Nevaljan id" });
       }
       try {
-        const b = request.body as { bicikl_id?: number; kolicina?: number };
+        const b = request.body as { jedinica_id?: number; bicikl_id?: number; kolicina?: number };
         const det = await service.addStavka(id, {
-          bicikl_id: Number(b.bicikl_id),
+          jedinica_id: Number(b.jedinica_id ?? b.bicikl_id),
           kolicina: Number(b.kolicina),
         }, auth);
         if (!det) return reply.code(404).send({ error: "Narudžba nije pronađena" });
@@ -144,6 +157,10 @@ export async function registerNarudzbeRoutes(app: FastifyInstance): Promise<void
       } catch (e) {
         const v = validationReply(reply, e);
         if (v !== null) return v;
+        const sc = (e as Error & { statusCode?: number }).statusCode;
+        if (sc === 403) {
+          return reply.code(403).send({ error: e instanceof Error ? e.message : "Zabranjeno" });
+        }
         throw e;
       }
     },
@@ -164,9 +181,9 @@ export async function registerNarudzbeRoutes(app: FastifyInstance): Promise<void
         return reply.code(400).send({ error: "Nevaljan id" });
       }
       try {
-        const b = request.body as { bicikl_id?: number; kolicina?: number };
+        const b = request.body as { jedinica_id?: number; bicikl_id?: number; kolicina?: number };
         const det = await service.updateStavka(narId, stId, {
-          bicikl_id: b.bicikl_id,
+          jedinica_id: b.jedinica_id !== undefined ? Number(b.jedinica_id) : b.bicikl_id !== undefined ? Number(b.bicikl_id) : undefined,
           kolicina: b.kolicina,
         }, auth);
         if (!det) return reply.code(404).send({ error: "Narudžba ili stavka nije pronađena" });
@@ -174,6 +191,10 @@ export async function registerNarudzbeRoutes(app: FastifyInstance): Promise<void
       } catch (e) {
         const v = validationReply(reply, e);
         if (v !== null) return v;
+        const sc = (e as Error & { statusCode?: number }).statusCode;
+        if (sc === 403) {
+          return reply.code(403).send({ error: e instanceof Error ? e.message : "Zabranjeno" });
+        }
         throw e;
       }
     },
@@ -200,6 +221,10 @@ export async function registerNarudzbeRoutes(app: FastifyInstance): Promise<void
       } catch (e) {
         const v = validationReply(reply, e);
         if (v !== null) return v;
+        const sc = (e as Error & { statusCode?: number }).statusCode;
+        if (sc === 403) {
+          return reply.code(403).send({ error: e instanceof Error ? e.message : "Zabranjeno" });
+        }
         throw e;
       }
     },

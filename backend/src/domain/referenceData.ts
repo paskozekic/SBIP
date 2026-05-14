@@ -13,7 +13,9 @@ export type DjelatnikOption = {
 };
 
 export type BiciklOption = {
+  jedinica_id: number;
   bicikl_id: number;
+  inventarni_broj: string;
   naziv: string;
   kolicina: number;
   cijena: string;

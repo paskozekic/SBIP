@@ -1,9 +1,11 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { apiJson, getToken, setToken } from "../lib/api";
 
+import type { UserRole } from "./userRole";
+
 export type AuthUser = {
   korisnik_id: number;
-  role: "kupac" | "djelatnik";
+  role: UserRole;
   ime: string;
   prezime: string;
   email: string;

@@ -34,50 +34,46 @@ export class NajamService {
 
   async kreiraj(
     kupacKorisnikId: number,
-    body: { bicikl_id: number; datum_pocetka: string; datum_zavrsetka: string },
+    body: { jedinica_id: number; datum_pocetka: string; datum_zavrsetka: string },
   ): Promise<NajamRowDb & { prikaz_statusa: "AKTIVAN" | "VRACEN" | "KASNJENJE" }> {
-    const biciklId = Number(body.bicikl_id);
+    const jedinicaId = Number(body.jedinica_id);
     const dp = body.datum_pocetka?.trim();
     const dz = body.datum_zavrsetka?.trim();
-    if (!Number.isFinite(biciklId) || !dp || !dz) {
-      throw new Error("VALIDATION: bicikl_id, datum_pocetka i datum_zavrsetka su obavezni");
+    if (!Number.isFinite(jedinicaId) || !dp || !dz) {
+      throw new Error("VALIDATION: jedinica_id, datum_pocetka i datum_zavrsetka su obavezni");
     }
     const dani = danaUkljucivo(dp, dz);
-    const bicikl = await this.biciklRepo.findById(biciklId);
-    if (!bicikl) throw new Error("VALIDATION: bicikl ne postoji");
-    if (bicikl.status !== "DOSTUPAN") throw new Error("VALIDATION: bicikl nije dostupan za najam");
-    if (!bicikl.cijena_najma_po_danu || Number(bicikl.cijena_najma_po_danu) <= 0) {
-      throw new Error("VALIDATION: bicikl nema definiranu cijenu najma po danu");
+    const jed = await this.biciklRepo.findJedinicaById(jedinicaId);
+    if (!jed) throw new Error("VALIDATION: jedinica ne postoji");
+    if (jed.status !== "DOSTUPAN") throw new Error("VALIDATION: jedinica nije dostupna za najam");
+    if (!jed.cijena_najma_po_danu || Number(jed.cijena_najma_po_danu) <= 0) {
+      throw new Error("VALIDATION: vrsta nema definiranu cijenu najma po danu");
     }
-    if (bicikl.kolicina <= 0) throw new Error("VALIDATION: nema raspoloživih jedinica");
-    const overlap = await this.repo.countAktivanOverlap(biciklId, dp, dz);
-    if (overlap > 0) throw new Error("VALIDATION: u odabranom razdoblju bicikl je već iznajmljen");
-    const cijenaPoDanu = Number(bicikl.cijena_najma_po_danu);
+    const overlap = await this.repo.countAktivanOverlap(jedinicaId, dp, dz);
+    if (overlap > 0) throw new Error("VALIDATION: u odabranom razdoblju jedinica je već iznajmljena");
+    const cijenaPoDanu = Number(jed.cijena_najma_po_danu);
     const ukupno = (dani * cijenaPoDanu).toFixed(2);
     const nid = await this.repo.insert({
       datum_pocetka: dp,
       datum_zavrsetka: dz,
       status_najma: "AKTIVAN",
       ukupna_cijena: ukupno,
-      bicikl_id: biciklId,
+      jedinica_id: jedinicaId,
       djelatnik_korisnik_id: null,
       kupac_korisnik_id: kupacKorisnikId,
     });
-    await this.biciklRepo.setStatus(biciklId, "IZNAJMLJEN");
+    await this.biciklRepo.setJedinicaStatus(jedinicaId, "IZNAJMLJEN");
     const row = await this.repo.findById(nid);
     if (!row) throw new Error("INTERNAL: najam nije učitan");
     return withPrikaz(row);
   }
 
-  async oznaciVraceno(najamId: number): Promise<NajamRowDb & { prikaz_statusa: "AKTIVAN" | "VRACEN" | "KASNJENJE" } | null> {
+  async oznaciVraceno(najamId: number): Promise<(NajamRowDb & { prikaz_statusa: "AKTIVAN" | "VRACEN" | "KASNJENJE" }) | null> {
     const existing = await this.repo.findById(najamId);
     if (!existing) return null;
     const ok = await this.repo.setVracen(najamId);
     if (!ok) return null;
-    const b = await this.biciklRepo.findById(existing.bicikl_id);
-    if (b && b.status === "IZNAJMLJEN" && b.kolicina > 0) {
-      await this.biciklRepo.setStatus(existing.bicikl_id, "DOSTUPAN");
-    }
+    await this.biciklRepo.setJedinicaStatus(existing.jedinica_id, "DOSTUPAN");
     const row = await this.repo.findById(najamId);
     return row ? withPrikaz(row) : null;
   }

@@ -3,7 +3,7 @@
 # Pokretanje (iz korijena repozitorija):
 #   docker compose up -d
 #
-# Prvi put se izvršavaju database/SPIB_schema.sql i SPIB_seed.sql u tom redoslijedu.
+# Prvi put se izvršavaju database/SPIB_schema.sql, SPIB_seed.sql te idempotentni patch skripti (03–04).
 # Ponovno učitavanje SQL-a nakon promjene: docker compose down -v && docker compose up -d
 #
 # Opcionalno: kopiraj .env.example u .env i postavi POSTGRES_PASSWORD (Compose učitava .env za zamjenu varijabli ispod).
@@ -23,6 +23,8 @@ services:
       - spib_pgdata:/var/lib/postgresql/data
       - ./database/SPIB_schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
       - ./database/SPIB_seed.sql:/docker-entrypoint-initdb.d/02_seed.sql:ro
+      - ./database/SPIB_patch_administrator.sql:/docker-entrypoint-initdb.d/03_patch_administrator.sql:ro
+      - ./database/SPIB_patch_narudzba_datum_zavrsetka.sql:/docker-entrypoint-initdb.d/04_patch_narudzba_datum_zavrsetka.sql:ro
 
 volumes:
   spib_pgdata:

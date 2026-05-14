@@ -1,11 +1,12 @@
 import type { NarudzbaDetaljRow, NarudzbaListRow, StavkaNarudzbeRow } from "../domain/narudzba.js";
 import { pool } from "./pool.js";
 
-export type BiciklKatalogRow = {
+export type JedinicaZaStavkuRow = {
+  jedinica_id: number;
   bicikl_id: number;
   cijena: string;
-  kolicina: number;
   naziv: string;
+  status: string;
 };
 
 export class NarudzbaRepository {
@@ -20,10 +21,14 @@ export class NarudzbaRepository {
               n.kupac_korisnik_id,
               n.djelatnik_korisnik_id,
               k.ime AS kupac_ime,
-              k.prezime AS kupac_prezime
+              k.prezime AS kupac_prezime,
+              kd.ime AS djelatnik_ime,
+              kd.prezime AS djelatnik_prezime
        FROM narudzba n
        JOIN kupac ku ON ku.korisnik_id = n.kupac_korisnik_id
        JOIN korisnik k ON k.korisnik_id = ku.korisnik_id
+       LEFT JOIN djelatnik dj ON dj.korisnik_id = n.djelatnik_korisnik_id
+       LEFT JOIN korisnik kd ON kd.korisnik_id = dj.korisnik_id
        ORDER BY n.datum DESC
        LIMIT $1`,
       [limit],
@@ -42,10 +47,14 @@ export class NarudzbaRepository {
               n.kupac_korisnik_id,
               n.djelatnik_korisnik_id,
               k.ime AS kupac_ime,
-              k.prezime AS kupac_prezime
+              k.prezime AS kupac_prezime,
+              kd.ime AS djelatnik_ime,
+              kd.prezime AS djelatnik_prezime
        FROM narudzba n
        JOIN kupac ku ON ku.korisnik_id = n.kupac_korisnik_id
        JOIN korisnik k ON k.korisnik_id = ku.korisnik_id
+       LEFT JOIN djelatnik dj ON dj.korisnik_id = n.djelatnik_korisnik_id
+       LEFT JOIN korisnik kd ON kd.korisnik_id = dj.korisnik_id
        WHERE n.kupac_korisnik_id = $1
        ORDER BY n.datum DESC
        LIMIT $2`,
@@ -97,11 +106,13 @@ export class NarudzbaRepository {
       `SELECT sn.stavka_id,
               sn.kolicina,
               sn.cijena::text AS cijena,
-              sn.bicikl_id,
+              sn.jedinica_id,
               sn.narudzba_id,
-              b.naziv AS bicikl_naziv
+              b.naziv AS bicikl_naziv,
+              j.inventarni_broj AS bicikl_inventarni_broj
        FROM stavkanarudzbe sn
-       JOIN bicikl b ON b.bicikl_id = sn.bicikl_id
+       JOIN bicikl_jedinica j ON j.jedinica_id = sn.jedinica_id
+       JOIN bicikl b ON b.bicikl_id = j.bicikl_id
        WHERE sn.narudzba_id = $1
        ORDER BY sn.stavka_id`,
       [id],
@@ -127,7 +138,68 @@ export class NarudzbaRepository {
   }
 
   /**
-   * Ažuriranje zaglavlja; prijelaz u ZAVRSENA u istoj transakciji primjenjuje prodaju (zaliha + status bicikla).
+   * Jedna transakcija: narudžba NOVA + N stavki (po jednoj jedinici), s zaključavanjem jedinica.
+   */
+  async insertKupnjaNarudzbaSaStavkom(params: {
+    kupacKorisnikId: number;
+    adresaDostave: string;
+    nacinPlacanja: string;
+    biciklVrstaId: number;
+    kolicina: number;
+  }): Promise<number> {
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
+      const vr = await client.query<{ cijena: string }>(
+        `SELECT cijena::text AS cijena FROM bicikl WHERE bicikl_id = $1 FOR UPDATE`,
+        [params.biciklVrstaId],
+      );
+      const vrsta = vr.rows[0];
+      if (!vrsta) {
+        throw new Error("VALIDATION: vrsta bicikla ne postoji");
+      }
+      const jr = await client.query<{ jedinica_id: number }>(
+        `SELECT j.jedinica_id
+         FROM bicikl_jedinica j
+         WHERE j.bicikl_id = $1 AND j.status = 'DOSTUPAN'
+         ORDER BY j.jedinica_id
+         FOR UPDATE
+         LIMIT $2`,
+        [params.biciklVrstaId, params.kolicina],
+      );
+      if (jr.rows.length < params.kolicina) {
+        throw new Error("VALIDATION: nema dovoljno dostupnih jedinica ove vrste");
+      }
+      const nr = await client.query<{ narudzba_id: number }>(
+        `INSERT INTO narudzba (status, kupac_korisnik_id, djelatnik_korisnik_id, adresa_dostave, nacin_placanja)
+         VALUES ('NOVA', $1, NULL, $2, $3)
+         RETURNING narudzba_id`,
+        [params.kupacKorisnikId, params.adresaDostave, params.nacinPlacanja],
+      );
+      const nid = nr.rows[0]!.narudzba_id;
+      for (const row of jr.rows) {
+        await client.query(
+          `INSERT INTO stavkanarudzbe (kolicina, cijena, jedinica_id, narudzba_id)
+           VALUES (1, $1, $2, $3)`,
+          [vrsta.cijena, row.jedinica_id, nid],
+        );
+        await client.query(`UPDATE bicikl_jedinica SET status = 'PRODAN' WHERE jedinica_id = $1`, [
+          row.jedinica_id,
+        ]);
+      }
+      await client.query("COMMIT");
+      return nid;
+    } catch (e) {
+      await client.query("ROLLBACK");
+      throw e;
+    } finally {
+      client.release();
+    }
+  }
+
+  /**
+   * Ažuriranje zaglavlja; prvi prijelaz u POTVRDJENA (potvrda), ZAVRSENA ili U_OBRADI u istoj transakciji
+   * primjenjuje prodaju (zaliha + status jedinice) i postavlja prodaja_obradena + datum_zavrsetka za izvještaj.
    */
   async updateNarudzba(
     id: number,
@@ -152,44 +224,39 @@ export class NarudzbaRepository {
       const oldStatus = cur.rows[0]!.status;
       const newStatus = patch.status !== undefined ? patch.status : oldStatus;
       const becomesZavrsena = newStatus === "ZAVRSENA" && oldStatus !== "ZAVRSENA";
+      const becomesUObradi = newStatus === "U_OBRADI" && oldStatus !== "U_OBRADI";
+      const becomesPotvrdena = newStatus === "POTVRDJENA" && oldStatus !== "POTVRDJENA";
+      const prodajaVecObavljena = cur.rows[0]!.prodaja_obradena;
+      const primjeniProdajuPrviPut =
+        (becomesZavrsena || becomesUObradi || becomesPotvrdena) && !prodajaVecObavljena;
+      const becomesOtkazana =
+        newStatus === "OTKAZANA" && oldStatus !== "OTKAZANA" && !cur.rows[0]!.prodaja_obradena;
 
-      if (becomesZavrsena) {
-        if (cur.rows[0]!.prodaja_obradena) {
-          await client.query("ROLLBACK");
-          throw new Error("VALIDATION: prodaja je već obrađena za ovu narudžbu");
+      if (becomesOtkazana) {
+        const lines = await client.query<{ jedinica_id: number }>(
+          `SELECT jedinica_id FROM stavkanarudzbe WHERE narudzba_id = $1`,
+          [id],
+        );
+        for (const ln of lines.rows) {
+          await client.query(`UPDATE bicikl_jedinica SET status = 'DOSTUPAN' WHERE jedinica_id = $1`, [
+            ln.jedinica_id,
+          ]);
         }
-        const lines = await client.query<{ bicikl_id: number; kolicina: number }>(
-          `SELECT bicikl_id, kolicina FROM stavkanarudzbe WHERE narudzba_id = $1`,
+      }
+
+      if (primjeniProdajuPrviPut) {
+        const lines = await client.query<{ jedinica_id: number; kolicina: number }>(
+          `SELECT jedinica_id, kolicina FROM stavkanarudzbe WHERE narudzba_id = $1`,
           [id],
         );
         if (lines.rowCount === 0) {
           await client.query("ROLLBACK");
-          throw new Error("VALIDATION: narudžba mora imati barem jednu stavku prije završetka");
+          throw new Error("VALIDATION: narudžba mora imati barem jednu stavku prije potvrde (knjiženja prodaje)");
         }
         for (const ln of lines.rows) {
-          await client.query(`UPDATE bicikl SET kolicina = kolicina - $1 WHERE bicikl_id = $2`, [
-            ln.kolicina,
-            ln.bicikl_id,
+          await client.query(`UPDATE bicikl_jedinica SET status = 'PRODAN' WHERE jedinica_id = $1`, [
+            ln.jedinica_id,
           ]);
-          const br = await client.query<{ kolicina: number }>(
-            `SELECT kolicina FROM bicikl WHERE bicikl_id = $1`,
-            [ln.bicikl_id],
-          );
-          const nk = Number(br.rows[0]?.kolicina ?? -1);
-          if (nk < 0) {
-            await client.query("ROLLBACK");
-            throw new Error("VALIDATION: prodaja premašuje zalihu na skladištu");
-          }
-          if (nk === 0) {
-            await client.query(`UPDATE bicikl SET status = 'PRODAN' WHERE bicikl_id = $1`, [ln.bicikl_id]);
-          } else {
-            await client.query(
-              `UPDATE bicikl
-               SET status = CASE WHEN status IN ('U_SERVISU', 'NEDOSTUPAN') THEN status ELSE 'DOSTUPAN' END
-               WHERE bicikl_id = $1`,
-              [ln.bicikl_id],
-            );
-          }
         }
       }
 
@@ -212,8 +279,9 @@ export class NarudzbaRepository {
         parts.push(`nacin_placanja = $${i++}`);
         vals.push(patch.nacin_placanja);
       }
-      if (becomesZavrsena) {
+      if (primjeniProdajuPrviPut) {
         parts.push(`prodaja_obradena = TRUE`);
+        parts.push(`datum_zavrsetka = CURRENT_TIMESTAMP`);
       }
       if (parts.length === 0) {
         await client.query("COMMIT");
@@ -231,45 +299,53 @@ export class NarudzbaRepository {
     }
   }
 
-  async getBicikl(biciklId: number): Promise<BiciklKatalogRow | null> {
-    const res = await pool.query<BiciklKatalogRow>(
-      `SELECT bicikl_id, cijena::text AS cijena, kolicina, naziv FROM bicikl WHERE bicikl_id = $1`,
-      [biciklId],
+  async getJedinicaZaStavku(jedinicaId: number): Promise<JedinicaZaStavkuRow | null> {
+    const res = await pool.query<JedinicaZaStavkuRow>(
+      `SELECT j.jedinica_id,
+              j.bicikl_id,
+              b.cijena::text AS cijena,
+              b.naziv,
+              j.status
+       FROM bicikl_jedinica j
+       JOIN bicikl b ON b.bicikl_id = j.bicikl_id
+       WHERE j.jedinica_id = $1`,
+      [jedinicaId],
     );
     return res.rows[0] ?? null;
   }
 
-  async sumKolicinaZaBiciklUNarudzbi(
+  async sumKolicinaZaJedinicuUNarudzbi(
     narudzbaId: number,
-    biciklId: number,
+    jedinicaId: number,
     excludeStavkaId?: number,
   ): Promise<number> {
     const res = await pool.query<{ s: string }>(
       `SELECT COALESCE(SUM(kolicina), 0)::text AS s
        FROM stavkanarudzbe
-       WHERE narudzba_id = $1 AND bicikl_id = $2
+       WHERE narudzba_id = $1 AND jedinica_id = $2
          AND ($3::int IS NULL OR stavka_id <> $3::int)`,
-      [narudzbaId, biciklId, excludeStavkaId ?? null],
+      [narudzbaId, jedinicaId, excludeStavkaId ?? null],
     );
     return Number(res.rows[0]?.s ?? 0);
   }
 
   async insertStavka(
     narudzbaId: number,
-    biciklId: number,
+    jedinicaId: number,
     kolicina: number,
     cijena: string,
   ): Promise<StavkaNarudzbeRow> {
     const res = await pool.query<StavkaNarudzbeRow>(
-      `INSERT INTO stavkanarudzbe AS sn (kolicina, cijena, bicikl_id, narudzba_id)
+      `INSERT INTO stavkanarudzbe AS sn (kolicina, cijena, jedinica_id, narudzba_id)
        VALUES ($1, $2, $3, $4)
        RETURNING sn.stavka_id,
                  sn.kolicina,
                  sn.cijena::text AS cijena,
-                 sn.bicikl_id,
+                 sn.jedinica_id,
                  sn.narudzba_id,
-                 (SELECT b.naziv FROM bicikl b WHERE b.bicikl_id = sn.bicikl_id) AS bicikl_naziv`,
-      [kolicina, cijena, biciklId, narudzbaId],
+                 (SELECT b.naziv FROM bicikl_jedinica j JOIN bicikl b ON b.bicikl_id = j.bicikl_id WHERE j.jedinica_id = sn.jedinica_id) AS bicikl_naziv,
+                 (SELECT j.inventarni_broj FROM bicikl_jedinica j WHERE j.jedinica_id = sn.jedinica_id) AS bicikl_inventarni_broj`,
+      [kolicina, cijena, jedinicaId, narudzbaId],
     );
     return res.rows[0]!;
   }
@@ -277,21 +353,22 @@ export class NarudzbaRepository {
   async updateStavka(
     stavkaId: number,
     narudzbaId: number,
-    biciklId: number,
+    jedinicaId: number,
     kolicina: number,
     cijena: string,
   ): Promise<StavkaNarudzbeRow | null> {
     const res = await pool.query<StavkaNarudzbeRow>(
       `UPDATE stavkanarudzbe AS sn
-       SET bicikl_id = $3, kolicina = $4, cijena = $5
+       SET jedinica_id = $3, kolicina = $4, cijena = $5
        WHERE sn.stavka_id = $1 AND sn.narudzba_id = $2
        RETURNING sn.stavka_id,
                  sn.kolicina,
                  sn.cijena::text AS cijena,
-                 sn.bicikl_id,
+                 sn.jedinica_id,
                  sn.narudzba_id,
-                 (SELECT b.naziv FROM bicikl b WHERE b.bicikl_id = sn.bicikl_id) AS bicikl_naziv`,
-      [stavkaId, narudzbaId, biciklId, kolicina, cijena],
+                 (SELECT b.naziv FROM bicikl_jedinica j JOIN bicikl b ON b.bicikl_id = j.bicikl_id WHERE j.jedinica_id = sn.jedinica_id) AS bicikl_naziv,
+                 (SELECT j.inventarni_broj FROM bicikl_jedinica j WHERE j.jedinica_id = sn.jedinica_id) AS bicikl_inventarni_broj`,
+      [stavkaId, narudzbaId, jedinicaId, kolicina, cijena],
     );
     return res.rows[0] ?? null;
   }
@@ -304,11 +381,15 @@ export class NarudzbaRepository {
     return (res.rowCount ?? 0) > 0;
   }
 
-  async getStavka(stavkaId: number, narudzbaId: number): Promise<{ bicikl_id: number; kolicina: number } | null> {
-    const res = await pool.query<{ bicikl_id: number; kolicina: number }>(
-      `SELECT bicikl_id, kolicina FROM stavkanarudzbe WHERE stavka_id = $1 AND narudzba_id = $2`,
+  async getStavka(stavkaId: number, narudzbaId: number): Promise<{ jedinica_id: number; kolicina: number } | null> {
+    const res = await pool.query<{ jedinica_id: number; kolicina: number }>(
+      `SELECT jedinica_id, kolicina FROM stavkanarudzbe WHERE stavka_id = $1 AND narudzba_id = $2`,
       [stavkaId, narudzbaId],
     );
     return res.rows[0] ?? null;
+  }
+
+  async setJedinicaStatus(jedinicaId: number, status: string): Promise<void> {
+    await pool.query(`UPDATE bicikl_jedinica SET status = $1 WHERE jedinica_id = $2`, [status, jedinicaId]);
   }
 }

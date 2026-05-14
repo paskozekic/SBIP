@@ -9,9 +9,10 @@ export type StavkaNarudzbeDto = {
   kolicina: number;
   /** Decimal kao string (JSON) */
   cijena: string;
-  bicikl_id: number;
+  jedinica_id: number;
   narudzba_id: number;
   bicikl_naziv: string | null;
+  bicikl_inventarni_broj: string | null;
 };
 
 /** Odgovor: lista narudžbi (zaglavlje + imena kupca) */
@@ -25,12 +26,12 @@ export type NarudzbaListDto = {
   kupac_ime: string;
   kupac_prezime: string;
   djelatnik_korisnik_id: number | null;
-};
-
-/** Odgovor: master–detail — zaglavlje + stavke + imena kupca i djelatnika */
-export type NarudzbaDetaljDto = NarudzbaListDto & {
   djelatnik_ime: string | null;
   djelatnik_prezime: string | null;
+};
+
+/** Odgovor: master–detail — zaglavlje + stavke */
+export type NarudzbaDetaljDto = NarudzbaListDto & {
   stavke: StavkaNarudzbeDto[];
 };
 
@@ -53,12 +54,12 @@ export type NarudzbaUpdateDto = {
 
 /** Ulaz: nova stavka (cijena se uzima iz kataloga bicikla — poslovno pravilo) */
 export type StavkaCreateDto = {
-  bicikl_id: number;
+  jedinica_id: number;
   kolicina: number;
 };
 
 /** Ulaz: izmjena stavke */
 export type StavkaUpdateDto = {
-  bicikl_id?: number;
+  jedinica_id?: number;
   kolicina?: number;
 };

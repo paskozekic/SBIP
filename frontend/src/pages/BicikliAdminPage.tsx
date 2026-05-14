@@ -1,10 +1,12 @@
-import { useCallback, useEffect, useState } from "react";
+import { Fragment, useCallback, useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { ApiError, apiJson, apiVoid } from "../lib/api";
 import { statusBicikla } from "../lib/biciklStatus";
 
-type Bicikl = {
+/** Agregat vrste (model) iz kataloga. */
+type Vrsta = {
   bicikl_id: number;
+  inventarni_broj: string;
   naziv: string;
   cijena: string;
   kolicina: number;
@@ -14,25 +16,31 @@ type Bicikl = {
   cijena_najma_po_danu: string | null;
 };
 
-type KatOpt = { kategorijaId: number; naziv: string };
-
-type UrediForm = {
+type Jedinica = {
+  jedinica_id: number;
+  bicikl_id: number;
+  inventarni_broj: string;
+  status: string;
   naziv: string;
   cijena: string;
-  kolicina: number;
-  status: string;
+  cijena_najma_po_danu: string | null;
+};
+
+type KatOpt = { kategorijaId: number; naziv: string };
+
+type UrediVrsta = {
+  naziv: string;
+  cijena: string;
   kategorija_id: number;
   cijena_najma_po_danu: string;
 };
 
 const STATUSI = ["DOSTUPAN", "IZNAJMLJEN", "PRODAN", "U_SERVISU", "NEDOSTUPAN"];
 
-function formIzBicikla(b: Bicikl): UrediForm {
+function formVrsta(b: Vrsta): UrediVrsta {
   return {
     naziv: b.naziv,
     cijena: b.cijena,
-    kolicina: b.kolicina,
-    status: b.status,
     kategorija_id: b.kategorija_id,
     cijena_najma_po_danu:
       b.cijena_najma_po_danu != null && String(b.cijena_najma_po_danu).trim() !== ""
@@ -43,101 +51,146 @@ function formIzBicikla(b: Bicikl): UrediForm {
 
 export default function BicikliAdminPage() {
   const { user } = useAuth();
-  const [lista, setLista] = useState<Bicikl[]>([]);
+  const [lista, setLista] = useState<Vrsta[]>([]);
   const [kat, setKat] = useState<KatOpt[]>([]);
   const [greska, setGreska] = useState<string | null>(null);
 
-  const [naziv, setNaziv] = useState("");
-  const [cijena, setCijena] = useState("");
-  const [kolicina, setKolicina] = useState(1);
-  const [status, setStatus] = useState("DOSTUPAN");
-  const [kategorijaId, setKategorijaId] = useState("");
-  const [cijenaNajma, setCijenaNajma] = useState("");
+  const [editVrstaId, setEditVrstaId] = useState<number | null>(null);
+  const [urediVrsta, setUrediVrsta] = useState<UrediVrsta | null>(null);
 
-  const [editId, setEditId] = useState<number | null>(null);
-  const [uredi, setUredi] = useState<UrediForm | null>(null);
+  const [expandedVrsta, setExpandedVrsta] = useState<number | null>(null);
+  const [jedinice, setJedinice] = useState<Jedinica[]>([]);
+  const [novaJedStatus, setNovaJedStatus] = useState("DOSTUPAN");
+
+  const [editJedId, setEditJedId] = useState<number | null>(null);
+  const [editJedInv, setEditJedInv] = useState("");
+  const [editJedStatus, setEditJedStatus] = useState("DOSTUPAN");
 
   const load = useCallback(async () => {
     if (user?.role !== "djelatnik") return;
     const [b, k] = await Promise.all([
-      apiJson<Bicikl[]>("/api/katalog/bicikli"),
+      apiJson<Vrsta[]>("/api/katalog/bicikli"),
       apiJson<Array<{ kategorijaId: number; naziv: string }>>("/api/kategorije/za-odabir"),
     ]);
     setLista(b);
     setKat(k.map((x) => ({ kategorijaId: x.kategorijaId, naziv: x.naziv })));
-    setKategorijaId((prev) => prev || (k[0] ? String(k[0].kategorijaId) : ""));
   }, [user]);
+
+  const loadJedinice = useCallback(async (vrstaId: number) => {
+    const j = await apiJson<Jedinica[]>(`/api/bicikli/${vrstaId}/jedinice`);
+    setJedinice(j);
+  }, []);
 
   useEffect(() => {
     void load();
   }, [load]);
 
-  function pocniUredi(b: Bicikl) {
+  useEffect(() => {
+    if (expandedVrsta != null) void loadJedinice(expandedVrsta).catch(() => setJedinice([]));
+  }, [expandedVrsta, loadJedinice]);
+
+  function pocniUrediVrstu(b: Vrsta) {
     setGreska(null);
-    setEditId(b.bicikl_id);
-    setUredi(formIzBicikla(b));
+    setEditVrstaId(b.bicikl_id);
+    setUrediVrsta(formVrsta(b));
+    setExpandedVrsta(null);
   }
 
-  function odustaniUredi() {
-    setEditId(null);
-    setUredi(null);
+  function odustaniVrsta() {
+    setEditVrstaId(null);
+    setUrediVrsta(null);
     setGreska(null);
   }
 
-  async function spremiUredi() {
-    if (editId == null || !uredi) return;
+  async function spremiVrstu() {
+    if (editVrstaId == null || !urediVrsta) return;
     setGreska(null);
     try {
-      await apiJson<Bicikl>(`/api/bicikli/${editId}`, {
+      await apiJson(`/api/bicikli/${editVrstaId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          naziv: uredi.naziv.trim(),
-          cijena: uredi.cijena.trim(),
-          kolicina: uredi.kolicina,
-          status: uredi.status,
-          kategorija_id: uredi.kategorija_id,
-          cijena_najma_po_danu: uredi.cijena_najma_po_danu.trim() || null,
+          naziv: urediVrsta.naziv.trim(),
+          cijena: urediVrsta.cijena.trim(),
+          kategorija_id: urediVrsta.kategorija_id,
+          cijena_najma_po_danu: urediVrsta.cijena_najma_po_danu.trim() || null,
         }),
       });
-      odustaniUredi();
+      odustaniVrsta();
       await load();
     } catch (err) {
       setGreska(err instanceof ApiError ? err.message : "Greška");
     }
   }
 
-  async function dodaj(e: React.FormEvent) {
-    e.preventDefault();
+  async function dodajJedinicu(vrstaId: number) {
     setGreska(null);
     try {
-      await apiJson("/api/bicikli", {
+      await apiJson(`/api/bicikli/${vrstaId}/jedinice`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          naziv,
-          cijena,
-          kolicina,
-          status,
-          kategorija_id: Number(kategorijaId),
-          cijena_najma_po_danu: cijenaNajma.trim() || null,
+          inventarni_broj: null,
+          status: novaJedStatus,
         }),
       });
-      setNaziv("");
-      setCijena("");
-      setCijenaNajma("");
+      setNovaJedStatus("DOSTUPAN");
+      await loadJedinice(vrstaId);
       await load();
     } catch (err) {
       setGreska(err instanceof ApiError ? err.message : "Greška");
     }
   }
 
-  async function obrisi(id: number) {
-    if (!confirm("Obrisati bicikl?")) return;
+  async function spremiJedinicu() {
+    if (editJedId == null) return;
     setGreska(null);
-    if (editId === id) odustaniUredi();
     try {
-      await apiVoid(`/api/bicikli/${id}`, { method: "DELETE" });
+      await apiJson(`/api/bicikli/jedinice/${editJedId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          inventarni_broj: editJedInv.trim(),
+          status: editJedStatus,
+        }),
+      });
+      setEditJedId(null);
+      if (expandedVrsta != null) await loadJedinice(expandedVrsta);
+      await load();
+    } catch (err) {
+      setGreska(err instanceof ApiError ? err.message : "Greška");
+    }
+  }
+
+  async function obrisiJedinicu(jid: number) {
+    if (
+      !confirm(
+        "Obrisati ovu jedinicu? Ako postoje stavke narudžbe ili najmovi, bit će uklonjeni zajedno s povezanim plaćanjima najma.",
+      )
+    )
+      return;
+    setGreska(null);
+    try {
+      await apiVoid(`/api/bicikli/jedinice/${jid}?force=1`, { method: "DELETE" });
+      if (expandedVrsta != null) await loadJedinice(expandedVrsta);
+      await load();
+    } catch (err) {
+      setGreska(err instanceof ApiError ? err.message : "Greška");
+    }
+  }
+
+  async function obrisiVrstu(id: number) {
+    if (
+      !confirm(
+        "Obrisati cijelu vrstu (model) i sve njene jedinice? Povezane stavke narudžbi, najmovi i plaćanja najma bit će uklonjeni.",
+      )
+    )
+      return;
+    setGreska(null);
+    if (editVrstaId === id) odustaniVrsta();
+    if (expandedVrsta === id) setExpandedVrsta(null);
+    try {
+      await apiVoid(`/api/bicikli/${id}?force=1`, { method: "DELETE" });
       await load();
     } catch (err) {
       setGreska(err instanceof ApiError ? err.message : "Greška");
@@ -147,191 +200,252 @@ export default function BicikliAdminPage() {
   if (user?.role !== "djelatnik") {
     return (
       <div className="panel">
-        <p>Upravljanje katalogom bicikala (FZ-04 / KZ-04) dostupno je samo djelatnicima.</p>
+        <p>Upravljanje katalogom bicikala dostupno je samo djelatnicima.</p>
       </div>
     );
   }
 
   return (
     <div className="panel">
-      <h2>Katalog bicikala (admin)</h2>
       {greska && <p className="greska">{greska}</p>}
-      <h3>Novi bicikl</h3>
-      <form className="forma-blok forma-blok--zag" onSubmit={dodaj}>
-        <label>
-          Naziv
-          <input value={naziv} onChange={(e) => setNaziv(e.target.value)} required />
-        </label>
-        <label>
-          Prodajna cijena (€)
-          <input value={cijena} onChange={(e) => setCijena(e.target.value)} required />
-        </label>
-        <label>
-          Zaliha
-          <input type="number" min={0} value={kolicina} onChange={(e) => setKolicina(Number(e.target.value))} />
-        </label>
-        <label>
-          Status
-          <select value={status} onChange={(e) => setStatus(e.target.value)}>
-            {STATUSI.map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Kategorija (FZ-09)
-          <select value={kategorijaId} onChange={(e) => setKategorijaId(e.target.value)} required>
-            {kat.map((k) => (
-              <option key={k.kategorijaId} value={k.kategorijaId}>
-                {k.naziv}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Cijena najma / dan (opcionalno)
-          <input value={cijenaNajma} onChange={(e) => setCijenaNajma(e.target.value)} />
-        </label>
-        <button type="submit" className="btn">
-          Dodaj
-        </button>
-      </form>
-      <h3>Postojeći</h3>
+      <h2>Postojeće vrste</h2>
       <div className="table-wrap">
         <table className="tablica">
           <thead>
             <tr>
-              <th>#</th>
+              <th />
+              <th>Vrsta #</th>
               <th>Naziv</th>
               <th>Kat.</th>
               <th>Cijena</th>
               <th>Najam/d</th>
-              <th>Stat</th>
-              <th>Zal.</th>
+              <th>Dostupno</th>
               <th>Akcija</th>
             </tr>
           </thead>
           <tbody>
             {lista.map((b) => {
-              const u = editId === b.bicikl_id ? uredi : null;
+              const u = editVrstaId === b.bicikl_id ? urediVrsta : null;
+              const otv = expandedVrsta === b.bicikl_id;
+              const blokBrisanjeJed = otv && expandedVrsta === b.bicikl_id && editJedId !== null;
               return (
-                <tr key={b.bicikl_id}>
-                  <td>{b.bicikl_id}</td>
-                  <td>
-                    {u ? (
-                      <input
-                        className="tablica-cel-input tablica-cel-naziv"
-                        value={u.naziv}
-                        onChange={(e) => setUredi({ ...u, naziv: e.target.value })}
-                      />
-                    ) : (
-                      b.naziv
-                    )}
-                  </td>
-                  <td>
-                    {u ? (
-                      <select
-                        className="tablica-cel-input"
-                        value={u.kategorija_id}
-                        onChange={(e) => setUredi({ ...u, kategorija_id: Number(e.target.value) })}
-                      >
-                        {kat.map((k) => (
-                          <option key={k.kategorijaId} value={k.kategorijaId}>
-                            {k.naziv}
-                          </option>
-                        ))}
-                      </select>
-                    ) : (
-                      b.kategorija_naziv
-                    )}
-                  </td>
-                  <td>
-                    {u ? (
-                      <input
-                        className="tablica-cel-input"
-                        value={u.cijena}
-                        onChange={(e) => setUredi({ ...u, cijena: e.target.value })}
-                      />
-                    ) : (
-                      b.cijena
-                    )}
-                  </td>
-                  <td>
-                    {u ? (
-                      <input
-                        className="tablica-cel-input"
-                        value={u.cijena_najma_po_danu}
-                        onChange={(e) => setUredi({ ...u, cijena_najma_po_danu: e.target.value })}
-                        placeholder="prazno = nema"
-                      />
-                    ) : b.cijena_najma_po_danu != null && String(b.cijena_najma_po_danu).trim() !== "" ? (
-                      b.cijena_najma_po_danu
-                    ) : (
-                      "nije postavljeno"
-                    )}
-                  </td>
-                  <td>
-                    {u ? (
-                      <select
-                        className="tablica-cel-input"
-                        value={u.status}
-                        onChange={(e) => setUredi({ ...u, status: e.target.value })}
-                      >
-                        {STATUSI.map((s) => (
-                          <option key={s} value={s}>
-                            {s}
-                          </option>
-                        ))}
-                      </select>
-                    ) : (
-                      statusBicikla(b.status)
-                    )}
-                  </td>
-                  <td>
-                    {u ? (
-                      <input
-                        type="number"
-                        min={0}
-                        className="tablica-cel-input"
-                        value={u.kolicina}
-                        onChange={(e) => setUredi({ ...u, kolicina: Number(e.target.value) })}
-                      />
-                    ) : (
-                      b.kolicina
-                    )}
-                  </td>
-                  <td className="tablica-akcije">
-                    {u ? (
-                      <>
-                        <button type="button" className="btn btn-mali" onClick={() => void spremiUredi()}>
-                          Spremi
-                        </button>
-                        <button type="button" className="btn btn-mali btn-sekundarni" onClick={odustaniUredi}>
-                          Odustani
-                        </button>
-                      </>
-                    ) : (
+                <Fragment key={b.bicikl_id}>
+                  <tr>
+                    <td>
                       <button
                         type="button"
-                        className="btn btn-mali"
-                        onClick={() => pocniUredi(b)}
-                        disabled={editId !== null}
+                        className="btn btn-mali btn-sekundarni"
+                        onClick={() => {
+                          setExpandedVrsta(otv ? null : b.bicikl_id);
+                          setEditJedId(null);
+                        }}
+                        disabled={editVrstaId !== null}
                       >
-                        Uredi
+                        {otv ? "Sakrij" : "Jedinice"}
                       </button>
-                    )}
-                    <button
-                      type="button"
-                      className="btn btn-mali btn-sekundarni"
-                      onClick={() => void obrisi(b.bicikl_id)}
-                      disabled={editId !== null}
-                    >
-                      Obriši
-                    </button>
-                  </td>
-                </tr>
+                    </td>
+                    <td>{b.bicikl_id}</td>
+                    <td>
+                      {u ? (
+                        <input
+                          className="tablica-cel-input tablica-cel-naziv"
+                          value={u.naziv}
+                          onChange={(e) => setUrediVrsta({ ...u, naziv: e.target.value })}
+                        />
+                      ) : (
+                        b.naziv
+                      )}
+                    </td>
+                    <td>
+                      {u ? (
+                        <select
+                          className="tablica-cel-input"
+                          value={u.kategorija_id}
+                          onChange={(e) => setUrediVrsta({ ...u, kategorija_id: Number(e.target.value) })}
+                        >
+                          {kat.map((k) => (
+                            <option key={k.kategorijaId} value={k.kategorijaId}>
+                              {k.naziv}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        b.kategorija_naziv
+                      )}
+                    </td>
+                    <td>
+                      {u ? (
+                        <input
+                          className="tablica-cel-input"
+                          value={u.cijena}
+                          onChange={(e) => setUrediVrsta({ ...u, cijena: e.target.value })}
+                        />
+                      ) : (
+                        b.cijena
+                      )}
+                    </td>
+                    <td>
+                      {u ? (
+                        <input
+                          className="tablica-cel-input"
+                          value={u.cijena_najma_po_danu}
+                          onChange={(e) => setUrediVrsta({ ...u, cijena_najma_po_danu: e.target.value })}
+                          placeholder="prazno = nema"
+                        />
+                      ) : b.cijena_najma_po_danu != null && String(b.cijena_najma_po_danu).trim() !== "" ? (
+                        b.cijena_najma_po_danu
+                      ) : (
+                        "—"
+                      )}
+                    </td>
+                    <td>
+                      <strong>{b.kolicina}</strong> dost. · {statusBicikla(b.status)}
+                    </td>
+                    <td className="tablica-akcije">
+                      {u ? (
+                        <>
+                          <button type="button" className="btn btn-mali" onClick={() => void spremiVrstu()}>
+                            Spremi
+                          </button>
+                          <button type="button" className="btn btn-mali btn-sekundarni" onClick={odustaniVrsta}>
+                            Odustani
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          type="button"
+                          className="btn btn-mali"
+                          onClick={() => pocniUrediVrstu(b)}
+                          disabled={editVrstaId !== null}
+                        >
+                          Uredi vrstu
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        className="btn btn-mali btn-sekundarni"
+                        onClick={() => void obrisiVrstu(b.bicikl_id)}
+                        disabled={editVrstaId !== null || blokBrisanjeJed}
+                      >
+                        Obriši vrstu
+                      </button>
+                    </td>
+                  </tr>
+                  {otv && (
+                    <tr>
+                      <td colSpan={8} style={{ background: "var(--pozadina-naglasak, #f6f8fa)", padding: "0.75rem" }}>
+                        <h4 style={{ margin: "0 0 0.5rem" }}>Jedinice vrste „{b.naziv}”</h4>
+                        <div className="forma-blok" style={{ marginBottom: "0.5rem" }}>
+                          <label>
+                            Status
+                            <select value={novaJedStatus} onChange={(e) => setNovaJedStatus(e.target.value)}>
+                              {STATUSI.map((s) => (
+                                <option key={s} value={s}>
+                                  {s}
+                                </option>
+                              ))}
+                            </select>
+                          </label>
+                          <button
+                            type="button"
+                            className="btn btn-mali"
+                            onClick={() => void dodajJedinicu(b.bicikl_id)}
+                            disabled={editJedId !== null}
+                          >
+                            Dodaj jedinicu
+                          </button>
+                        </div>
+                        <table className="tablica" style={{ width: "100%" }}>
+                          <thead>
+                            <tr>
+                              <th>jed.</th>
+                              <th>Inv.</th>
+                              <th>Status</th>
+                              <th />
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {jedinice.map((j) => (
+                              <tr key={j.jedinica_id}>
+                                <td>{j.jedinica_id}</td>
+                                <td>
+                                  {editJedId === j.jedinica_id ? (
+                                    <input
+                                      className="tablica-cel-input"
+                                      value={editJedInv}
+                                      onChange={(e) => setEditJedInv(e.target.value)}
+                                      maxLength={64}
+                                    />
+                                  ) : (
+                                    j.inventarni_broj
+                                  )}
+                                </td>
+                                <td>
+                                  {editJedId === j.jedinica_id ? (
+                                    <select
+                                      className="tablica-cel-input"
+                                      value={editJedStatus}
+                                      onChange={(e) => setEditJedStatus(e.target.value)}
+                                    >
+                                      {STATUSI.map((s) => (
+                                        <option key={s} value={s}>
+                                          {s}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  ) : (
+                                    statusBicikla(j.status)
+                                  )}
+                                </td>
+                                <td className="tablica-akcije">
+                                  {editJedId === j.jedinica_id ? (
+                                    <>
+                                      <button
+                                        type="button"
+                                        className="btn btn-mali"
+                                        onClick={() => void spremiJedinicu()}
+                                      >
+                                        Spremi
+                                      </button>
+                                      <button
+                                        type="button"
+                                        className="btn btn-mali btn-sekundarni"
+                                        onClick={() => setEditJedId(null)}
+                                      >
+                                        Odustani
+                                      </button>
+                                    </>
+                                  ) : (
+                                    <button
+                                      type="button"
+                                      className="btn btn-mali"
+                                      onClick={() => {
+                                        setEditJedId(j.jedinica_id);
+                                        setEditJedInv(j.inventarni_broj);
+                                        setEditJedStatus(j.status);
+                                      }}
+                                      disabled={editVrstaId !== null}
+                                    >
+                                      Uredi
+                                    </button>
+                                  )}
+                                  <button
+                                    type="button"
+                                    className="btn btn-mali btn-sekundarni"
+                                    onClick={() => void obrisiJedinicu(j.jedinica_id)}
+                                    disabled={editVrstaId !== null || editJedId === j.jedinica_id}
+                                  >
+                                    Obriši
+                                  </button>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </td>
+                    </tr>
+                  )}
+                </Fragment>
               );
             })}
           </tbody>

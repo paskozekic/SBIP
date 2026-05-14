@@ -1,6 +1,6 @@
 import type { FastifyInstance, FastifyReply } from "fastify";
 import { IzvjestajiRepository } from "../infrastructure/izvjestajiRepository.js";
-import { requireDjelatnik } from "./requestAuth.js";
+import { requireAdministrator } from "./requestAuth.js";
 
 const repo = new IzvjestajiRepository();
 
@@ -11,7 +11,7 @@ function err(reply: FastifyReply, code: number, msg: string) {
 export async function registerIzvjestajiRoutes(app: FastifyInstance): Promise<void> {
   app.get("/izvjestaji/prodaja", async (request, reply) => {
     try {
-      requireDjelatnik(request);
+      requireAdministrator(request);
     } catch (e) {
       const sc = (e as Error & { statusCode?: number }).statusCode ?? 401;
       return err(reply, sc, e instanceof Error ? e.message : "Greška");
@@ -25,7 +25,7 @@ export async function registerIzvjestajiRoutes(app: FastifyInstance): Promise<vo
 
   app.get("/izvjestaji/najam", async (request, reply) => {
     try {
-      requireDjelatnik(request);
+      requireAdministrator(request);
     } catch (e) {
       const sc = (e as Error & { statusCode?: number }).statusCode ?? 401;
       return err(reply, sc, e instanceof Error ? e.message : "Greška");

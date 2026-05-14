@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import { apiJson } from "../lib/api";
 import { statusBicikla } from "../lib/biciklStatus";
 
@@ -6,6 +8,7 @@ type KatOpt = { kategorijaId: number; naziv: string };
 
 type BiciklKatalog = {
   bicikl_id: number;
+  inventarni_broj: string;
   naziv: string;
   cijena: string;
   kolicina: number;
@@ -16,12 +19,16 @@ type BiciklKatalog = {
 };
 
 export default function KatalogPage() {
+  const { user, loading: authUcitavanje } = useAuth();
+  const isDjelatnik = user?.role === "djelatnik";
+  const isAdministrator = user?.role === "administrator";
   const [kategorije, setKategorije] = useState<KatOpt[]>([]);
   const [katId, setKatId] = useState("");
   const [q, setQ] = useState("");
   const [cijenaOd, setCijenaOd] = useState("");
   const [cijenaDo, setCijenaDo] = useState("");
-  const [samoDostupni, setSamoDostupni] = useState(false);
+  /** Samo za djelatnika: kupci i gosti uvijek vide samo jedinice koje se stvarno mogu naručiti. */
+  const [djelatnikSamoDostupni, setDjelatnikSamoDostupni] = useState(false);
   const [rows, setRows] = useState<BiciklKatalog[]>([]);
   const [greska, setGreska] = useState<string | null>(null);
 
@@ -37,30 +44,59 @@ export default function KatalogPage() {
     if (katId) p.set("kategorija_id", katId);
     if (cijenaOd) p.set("cijena_od", cijenaOd);
     if (cijenaDo) p.set("cijena_do", cijenaDo);
-    if (samoDostupni) p.set("samo_dostupni", "1");
+    const kupackiPrikaz = !isDjelatnik;
+    if (kupackiPrikaz || djelatnikSamoDostupni) p.set("samo_dostupni", "1");
     try {
       const list = await apiJson<BiciklKatalog[]>(`/api/katalog/bicikli?${p.toString()}`);
       setRows(list);
     } catch (e) {
       setGreska(e instanceof Error ? e.message : "Greška");
     }
-  }, [q, katId, cijenaOd, cijenaDo, samoDostupni]);
+  }, [q, katId, cijenaOd, cijenaDo, djelatnikSamoDostupni, isDjelatnik]);
 
   useEffect(() => {
+    if (user?.role === "administrator") return;
     void loadKat();
-  }, [loadKat]);
+  }, [loadKat, user?.role]);
 
   useEffect(() => {
+    if (user?.role === "administrator") return;
     void pretrazi();
-  }, [pretrazi]);
+  }, [pretrazi, user?.role]);
+
+  if (authUcitavanje) {
+    return (
+      <div className="panel">
+        <p>Učitavanje…</p>
+      </div>
+    );
+  }
+
+  if (isAdministrator) {
+    return (
+      <div className="panel">
+        <h2>Katalog</h2>
+        <p>Katalog nije dostupan administratoru.</p>
+        <p>
+          <Link to="/">Natrag na početnu</Link>
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="panel">
       <h2>Katalog bicikala</h2>
+      {!isDjelatnik && (
+        <p className="hint">
+          Prikazane su <strong>vrste</strong> (modeli) s barem jednom jedinicom <strong>dostupnom za kupnju</strong>.
+          Kupnja dodjeljuje konkretne jedinice u pozadini. Djelatnik u punom pregledu vidi i ostale statuse.
+        </p>
+      )}
       {greska && <p className="greska">{greska}</p>}
       <div className="forma-blok forma-blok--zag">
         <label>
-          Naziv (dio)
+          Naziv ili inventarni broj
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="pretraga…" />
         </label>
         <label>
@@ -82,18 +118,41 @@ export default function KatalogPage() {
           Cijena do
           <input type="number" min={0} value={cijenaDo} onChange={(e) => setCijenaDo(e.target.value)} />
         </label>
-        <label className="chk-inline">
-          <input type="checkbox" checked={samoDostupni} onChange={(e) => setSamoDostupni(e.target.checked)} />
-          Samo dostupni (zaloga &gt; 0, status DOSTUPAN)
-        </label>
+        {isDjelatnik && (
+          <label className="chk-inline">
+            <input
+              type="checkbox"
+              checked={djelatnikSamoDostupni}
+              onChange={(e) => setDjelatnikSamoDostupni(e.target.checked)}
+            />
+            Samo dostupni za kupnju (kupci vide samo ovaj skup)
+          </label>
+        )}
       </div>
       <div className="kartice-katalog">
         {rows.map((b) => (
           <article key={b.bicikl_id} className="kartica-bicikl">
-            <h3>{b.naziv}</h3>
-            <p className="kartica-bicikl__meta">
-              {b.kategorija_naziv} · <span className="status-znacka">{statusBicikla(b.status)}</span>
-            </p>
+            {isDjelatnik ? (
+              <>
+                <p className="kartica-bicikl__id">
+                  Vrsta <strong>#{b.bicikl_id}</strong>
+                </p>
+                <h3>{b.naziv}</h3>
+                <p className="kartica-bicikl__meta">
+                  {b.kategorija_naziv} · <span className="status-znacka">{statusBicikla(b.status)}</span>
+                </p>
+              </>
+            ) : (
+              <>
+                <h3>{b.naziv}</h3>
+                <p className="kartica-bicikl__id" style={{ marginTop: 0 }}>
+                  <span className="hint" style={{ fontSize: "0.92em", fontWeight: 500 }}>
+                    Model #{b.bicikl_id}
+                  </span>
+                </p>
+                <p className="kartica-bicikl__meta">{b.kategorija_naziv}</p>
+              </>
+            )}
             <p>
               Prodaja: <strong>{b.cijena} €</strong>
             </p>
@@ -105,7 +164,14 @@ export default function KatalogPage() {
                   : "nije postavljeno"}
               </strong>
             </p>
-            <p>Zaliha: {b.kolicina}</p>
+            <p>Dostupnih jedinica: {b.kolicina}</p>
+            {user?.role === "kupac" && b.status === "DOSTUPAN" && b.kolicina > 0 && (
+              <p style={{ marginTop: "0.65rem" }}>
+                <Link to={`/kupnja?bicikl=${b.bicikl_id}`} className="btn btn-mali">
+                  Kupi
+                </Link>
+              </p>
+            )}
           </article>
         ))}
       </div>

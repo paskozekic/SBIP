@@ -1,6 +1,7 @@
 import type { FastifyInstance, FastifyReply } from "fastify";
 import { AuthService } from "../application/authService.js";
 import { verifyAccessToken } from "../lib/jwt.js";
+import type { JwtPayload } from "../lib/jwt.js";
 
 const service = new AuthService();
 
@@ -17,7 +18,7 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
     if (!h?.startsWith("Bearer ")) {
       return reply.code(401).send({ error: "Nedostaje token" });
     }
-    let payload: { sub: number; role: "kupac" | "djelatnik" };
+    let payload: JwtPayload;
     try {
       payload = verifyAccessToken(h.slice(7).trim());
     } catch {

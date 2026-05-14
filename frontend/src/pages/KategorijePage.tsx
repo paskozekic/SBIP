@@ -84,11 +84,16 @@ export default function KategorijePage() {
 
   async function obrisi() {
     if (urediId == null) return;
-    if (!confirm(`Obrisati kategoriju #${urediId}?`)) return;
+    if (
+      !confirm(
+        `Obrisati kategoriju #${urediId} i sve vrste bicikala u njoj? Uklonit će se i jedinice, stavke narudžbi, najmovi i plaćanja najma povezana s tim biciklima.`,
+      )
+    )
+      return;
     setGreska(null);
     setPoruka(null);
     try {
-      await apiVoid(`/api/kategorije/${urediId}`, { method: "DELETE" });
+      await apiVoid(`/api/kategorije/${urediId}?force=1`, { method: "DELETE" });
       setUrediId(null);
       setNaziv("");
       setOpis("");
@@ -108,7 +113,7 @@ export default function KategorijePage() {
       <div className="forma-blok forma-blok--filter">
         <label>
           Pretraga po nazivu
-          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="npr. grad" />
+          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="" />
         </label>
         <button type="button" className="btn btn-sekundarni" onClick={() => void load()}>
           Osvježi

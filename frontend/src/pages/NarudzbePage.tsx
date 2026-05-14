@@ -12,25 +12,24 @@ type NarudzbaList = {
   kupac_ime: string;
   kupac_prezime: string;
   djelatnik_korisnik_id: number | null;
+  djelatnik_ime: string | null;
+  djelatnik_prezime: string | null;
 };
 
 type Stavka = {
   stavka_id: number;
   kolicina: number;
   cijena: string;
-  bicikl_id: number;
+  jedinica_id: number;
   narudzba_id: number;
   bicikl_naziv: string | null;
+  bicikl_inventarni_broj: string | null;
 };
 
 type NarudzbaDetalj = NarudzbaList & {
-  djelatnik_ime: string | null;
-  djelatnik_prezime: string | null;
   stavke: Stavka[];
 };
 
-type Osoba = { korisnik_id: number; ime: string; prezime: string };
-type Bicikl = { bicikl_id: number; naziv: string; kolicina: number; cijena: string };
 type NarudzbaStatusOpcija = { kod: string; naziv: string };
 
 const NACINI = [
@@ -38,10 +37,6 @@ const NACINI = [
   { v: "KARTICA", l: "Kartica" },
   { v: "TRANSAKCIJSKI_RACUN", l: "Transakcijski račun" },
 ];
-
-function osobaLabel(o: Osoba) {
-  return `${o.prezime}, ${o.ime} (#${o.korisnik_id})`;
-}
 
 function statusPrikaz(kod: string, statusi: NarudzbaStatusOpcija[]) {
   const s = statusi.find((x) => x.kod === kod);
@@ -51,51 +46,18 @@ function statusPrikaz(kod: string, statusi: NarudzbaStatusOpcija[]) {
 export default function NarudzbePage() {
   const { user } = useAuth();
   const [lista, setLista] = useState<NarudzbaList[]>([]);
-  const [kupci, setKupci] = useState<Osoba[]>([]);
-  const [djelatnici, setDjelatnici] = useState<Osoba[]>([]);
-  const [bicikli, setBicikli] = useState<Bicikl[]>([]);
   const [statusi, setStatusi] = useState<NarudzbaStatusOpcija[]>([]);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [detalj, setDetalj] = useState<NarudzbaDetalj | null>(null);
   const [greska, setGreska] = useState<string | null>(null);
   const [loadDetalj, setLoadDetalj] = useState(0);
 
-  const [novaOtvorena, setNovaOtvorena] = useState(false);
-  const [novaStatus, setNovaStatus] = useState("NOVA");
-  const [novaKupac, setNovaKupac] = useState<number | "">("");
-  const [novaDjel, setNovaDjel] = useState<number | "">("");
-  const [novaAdresa, setNovaAdresa] = useState("");
-  const [novaNacin, setNovaNacin] = useState("POUZEĆE");
-
-  const [zagStatus, setZagStatus] = useState("");
-  const [zagDjel, setZagDjel] = useState<number | "">("");
-  const [zagAdresa, setZagAdresa] = useState("");
-  const [zagNacin, setZagNacin] = useState("POUZEĆE");
-
-  const [novaStBicikl, setNovaStBicikl] = useState<number | "">("");
-  const [novaStKol, setNovaStKol] = useState(1);
-
-  const [editStId, setEditStId] = useState<number | null>(null);
-  const [editBicikl, setEditBicikl] = useState<number | "">("");
-  const [editKol, setEditKol] = useState(1);
+  const [potvrdaUcitavanje, setPotvrdaUcitavanje] = useState(false);
 
   const loadSifre = useCallback(async () => {
-    const [k, d, b, st] = await Promise.all([
-      apiJson<Osoba[]>("/api/kupci"),
-      apiJson<Osoba[]>("/api/djelatnici"),
-      apiJson<Bicikl[]>("/api/bicikli"),
-      apiJson<NarudzbaStatusOpcija[]>("/api/narudzbe/statusi"),
-    ]);
-    setKupci(k);
-    setDjelatnici(d);
-    setBicikli(b);
+    const st = await apiJson<NarudzbaStatusOpcija[]>("/api/narudzbe/statusi");
     setStatusi(st);
-    if (user?.role === "kupac") {
-      setNovaKupac(user.korisnik_id);
-    } else {
-      setNovaKupac((prev) => (prev === "" && k[0] ? k[0].korisnik_id : prev));
-    }
-  }, [user]);
+  }, []);
 
   const loadLista = useCallback(async () => {
     const rows = await apiJson<NarudzbaList[]>("/api/narudzbe?limit=100");
@@ -130,10 +92,6 @@ export default function NarudzbePage() {
         const d = await apiJson<NarudzbaDetalj>(`/api/narudzbe/${selectedId}`);
         if (!o) {
           setDetalj(d);
-          setZagStatus(d.status);
-          setZagDjel(d.djelatnik_korisnik_id ?? "");
-          setZagAdresa(d.adresa_dostave ?? "");
-          setZagNacin(d.nacin_placanja ?? "POUZEĆE");
         }
       } catch (e) {
         if (!o) setGreska(e instanceof ApiError ? e.message : "Greška detalja");
@@ -144,111 +102,22 @@ export default function NarudzbePage() {
     };
   }, [selectedId, loadDetalj]);
 
-  async function spremiZaglavlje() {
-    if (selectedId == null) return;
+  async function potvrdiNarudzbu() {
+    if (selectedId == null || !detalj) return;
     setGreska(null);
+    setPotvrdaUcitavanje(true);
     try {
-      const body: {
-        status?: string;
-        djelatnik_korisnik_id?: number | null;
-        adresa_dostave?: string;
-        nacin_placanja?: string;
-      } = {};
-      if (zagStatus.trim()) body.status = zagStatus.trim();
-      body.djelatnik_korisnik_id = zagDjel === "" ? null : Number(zagDjel);
-      body.adresa_dostave = zagAdresa.trim();
-      body.nacin_placanja = zagNacin;
-      const d = await apiJson<NarudzbaDetalj>(`/api/narudzbe/${selectedId}`, {
+      await apiJson<NarudzbaDetalj>(`/api/narudzbe/${selectedId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
+        body: JSON.stringify({ status: "POTVRDJENA" }),
       });
-      setDetalj(d);
+      setLoadDetalj((x) => x + 1);
       await loadLista();
     } catch (e) {
-      setGreska(e instanceof ApiError ? e.message : "Greška spremanja");
-    }
-  }
-
-  async function dodajStavku() {
-    if (selectedId == null || novaStBicikl === "") return;
-    setGreska(null);
-    try {
-      await apiJson<NarudzbaDetalj>(`/api/narudzbe/${selectedId}/stavke`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ bicikl_id: Number(novaStBicikl), kolicina: novaStKol }),
-      });
-      setLoadDetalj((x) => x + 1);
-      setNovaStKol(1);
-    } catch (e) {
-      setGreska(e instanceof ApiError ? e.message : "Greška dodavanja stavke");
-    }
-  }
-
-  async function spremiStavku() {
-    if (selectedId == null || editStId == null || editBicikl === "") return;
-    setGreska(null);
-    try {
-      await apiJson<NarudzbaDetalj>(`/api/narudzbe/${selectedId}/stavke/${editStId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ bicikl_id: Number(editBicikl), kolicina: editKol }),
-      });
-      setEditStId(null);
-      setLoadDetalj((x) => x + 1);
-    } catch (e) {
-      setGreska(e instanceof ApiError ? e.message : "Greška stavke");
-    }
-  }
-
-  async function obrisiStavku(stavkaId: number) {
-    if (selectedId == null || !confirm("Obrisati stavku?")) return;
-    setGreska(null);
-    try {
-      await apiJson<NarudzbaDetalj>(`/api/narudzbe/${selectedId}/stavke/${stavkaId}`, {
-        method: "DELETE",
-      });
-      setLoadDetalj((x) => x + 1);
-    } catch (e) {
-      setGreska(e instanceof ApiError ? e.message : "Greška brisanja");
-    }
-  }
-
-  async function kreirajNarudzbu() {
-    if (!user) {
-      setGreska("Prijavite se za kreiranje narudžbe.");
-      return;
-    }
-    if (user.role === "djelatnik" && novaKupac === "") return;
-    if (!novaAdresa.trim()) {
-      setGreska("Adresa dostave je obavezna.");
-      return;
-    }
-    setGreska(null);
-    try {
-      const body = {
-        status: novaStatus.trim() || "NOVA",
-        kupac_korisnik_id: user.role === "kupac" ? user.korisnik_id : Number(novaKupac),
-        djelatnik_korisnik_id: novaDjel === "" ? null : Number(novaDjel),
-        adresa_dostave: novaAdresa.trim(),
-        nacin_placanja: novaNacin,
-      };
-      const d = await apiJson<NarudzbaDetalj>("/api/narudzbe", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      setNovaOtvorena(false);
-      setSelectedId(d.narudzba_id);
-      setDetalj(d);
-      setZagStatus(d.status);
-      setZagDjel(d.djelatnik_korisnik_id ?? "");
-      setZagAdresa(d.adresa_dostave);
-      setZagNacin(d.nacin_placanja);
-      await loadLista();
-    } catch (e) {
-      setGreska(e instanceof ApiError ? e.message : "Greška kreiranja");
+      setGreska(e instanceof ApiError ? e.message : "Greška potvrde");
+    } finally {
+      setPotvrdaUcitavanje(false);
     }
   }
 
@@ -257,79 +126,12 @@ export default function NarudzbePage() {
       <section className="panel">
         <div className="panel-head">
           <h2>Narudžbe</h2>
-          <button type="button" className="btn btn-sekundarni" onClick={() => setNovaOtvorena((v) => !v)}>
-            {novaOtvorena ? "Zatvori" : "Nova narudžba"}
-          </button>
         </div>
-        {!user && <p className="hint">Za novu narudžbu i stavke potrebna je prijava (kupac ili djelatnik).</p>}
-        {novaOtvorena && (
-          <div className="forma-blok">
-            <label>
-              Status
-              <select
-                value={novaStatus}
-                onChange={(e) => setNovaStatus(e.target.value)}
-                disabled={statusi.length === 0}
-              >
-                {statusi.map((s) => (
-                  <option key={s.kod} value={s.kod}>
-                    {s.naziv}
-                  </option>
-                ))}
-              </select>
-            </label>
-            {user?.role === "djelatnik" ? (
-              <label>
-                Kupac
-                <select
-                  value={novaKupac === "" ? "" : String(novaKupac)}
-                  onChange={(e) => setNovaKupac(e.target.value ? Number(e.target.value) : "")}
-                >
-                  {kupci.map((k) => (
-                    <option key={k.korisnik_id} value={k.korisnik_id}>
-                      {osobaLabel(k)}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            ) : (
-              <p className="hint">
-                Kupac: <strong>{user ? `${user.prezime}, ${user.ime}` : "—"}</strong>
-              </p>
-            )}
-            <label>
-              Djelatnik (opcionalno)
-              <select
-                value={novaDjel === "" ? "" : String(novaDjel)}
-                onChange={(e) => setNovaDjel(e.target.value ? Number(e.target.value) : "")}
-              >
-                <option value="">—</option>
-                {djelatnici.map((d) => (
-                  <option key={d.korisnik_id} value={d.korisnik_id}>
-                    {osobaLabel(d)}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Adresa dostave
-              <input value={novaAdresa} onChange={(e) => setNovaAdresa(e.target.value)} placeholder="Ulica, grad" />
-            </label>
-            <label>
-              Način plaćanja
-              <select value={novaNacin} onChange={(e) => setNovaNacin(e.target.value)}>
-                {NACINI.map((n) => (
-                  <option key={n.v} value={n.v}>
-                    {n.l}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <button type="button" className="btn" onClick={kreirajNarudzbu} disabled={!user}>
-              Kreiraj
-            </button>
-          </div>
-        )}
+        <p className="hint">
+          Novu narudžbu kupnje kreirate na stranici <strong>Kupnja</strong>. Rezervacija najma ide preko{" "}
+          <strong>Najam</strong> (nije narudžba kupnje).
+        </p>
+        {!user && <p className="hint">Za pregled vlastitih narudžbi prijavite se kao kupac.</p>}
         <ul className="lista-nar">
           {lista.map((n) => (
             <li key={n.narudzba_id}>
@@ -341,6 +143,14 @@ export default function NarudzbePage() {
                 <span className="lista-nar__id">#{n.narudzba_id}</span>
                 <span className="lista-nar__meta">
                   {statusPrikaz(n.status, statusi)} · {n.kupac_prezime} {n.kupac_ime}
+                  {n.djelatnik_prezime != null &&
+                    n.djelatnik_ime != null &&
+                    n.djelatnik_korisnik_id != null && (
+                    <>
+                      {" "}
+                      · potvrdio/la {n.djelatnik_prezime} {n.djelatnik_ime}
+                    </>
+                  )}
                 </span>
                 <span className="lista-nar__dat">{n.datum}</span>
               </button>
@@ -364,56 +174,42 @@ export default function NarudzbePage() {
                 Kupac: {detalj.kupac_prezime} {detalj.kupac_ime}
               </p>
               <p>
-                Dostava: {detalj.adresa_dostave} · Plaćanje: {NACINI.find((x) => x.v === detalj.nacin_placanja)?.l ?? detalj.nacin_placanja}
+                <strong>Status:</strong> {statusPrikaz(detalj.status, statusi)}
               </p>
-              <label>
-                Status
-                <select
-                  value={zagStatus}
-                  onChange={(e) => setZagStatus(e.target.value)}
-                  disabled={statusi.length === 0}
-                >
-                  {zagStatus && !statusi.some((s) => s.kod === zagStatus) ? (
-                    <option value={zagStatus}>{zagStatus} (u bazi)</option>
-                  ) : null}
-                  {statusi.map((s) => (
-                    <option key={s.kod} value={s.kod}>
-                      {s.naziv}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                Djelatnik
-                <select
-                  value={zagDjel === "" ? "" : String(zagDjel)}
-                  onChange={(e) => setZagDjel(e.target.value ? Number(e.target.value) : "")}
-                >
-                  <option value="">—</option>
-                  {djelatnici.map((d) => (
-                    <option key={d.korisnik_id} value={d.korisnik_id}>
-                      {osobaLabel(d)}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                Adresa dostave
-                <input value={zagAdresa} onChange={(e) => setZagAdresa(e.target.value)} />
-              </label>
-              <label>
-                Način plaćanja
-                <select value={zagNacin} onChange={(e) => setZagNacin(e.target.value)}>
-                  {NACINI.map((n) => (
-                    <option key={n.v} value={n.v}>
-                      {n.l}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <button type="button" className="btn" onClick={spremiZaglavlje} disabled={!user}>
-                Spremi zaglavlje
-              </button>
+              <p>
+                <strong>Djelatnik (potvrda):</strong>{" "}
+                {detalj.djelatnik_korisnik_id != null &&
+                detalj.djelatnik_ime != null &&
+                detalj.djelatnik_prezime != null
+                  ? `${detalj.djelatnik_prezime}, ${detalj.djelatnik_ime} (#${detalj.djelatnik_korisnik_id})`
+                  : "—"}
+              </p>
+              <p>
+                <strong>Adresa dostave:</strong> {detalj.adresa_dostave}
+              </p>
+              <p>
+                <strong>Način plaćanja:</strong>{" "}
+                {NACINI.find((x) => x.v === detalj.nacin_placanja)?.l ?? detalj.nacin_placanja}
+              </p>
+              {user?.role === "djelatnik" && detalj.status === "NOVA" && (
+                <p style={{ marginTop: "0.75rem" }}>
+                  <button
+                    type="button"
+                    className="btn"
+                    disabled={potvrdaUcitavanje}
+                    onClick={() => void potvrdiNarudzbu()}
+                  >
+                    {potvrdaUcitavanje ? "Potvrda…" : "Potvrdi narudžbu (Nova → Potvrđena)"}
+                  </button>
+                </p>
+              )}
+              <p className="hint" style={{ marginBottom: 0 }}>
+                {user?.role === "kupac" && detalj.kupac_korisnik_id === user.korisnik_id
+                  ? "Ovo je samo pregled vaše narudžbe i stavki. Izmjene (uključujući zaglavlje) mogu izvršiti samo djelatnici u skladu s poslovnim pravilima."
+                  : user?.role === "djelatnik"
+                    ? "Kao djelatnik potvrđujete narudžbu u statusu Nova (Nova → Potvrđena); prodaja se tada knjiži i ulazi u izvještaj prodaje."
+                    : "Zaglavlje je samo za pregled."}
+              </p>
             </div>
 
             <h3>Stavke</h3>
@@ -422,107 +218,24 @@ export default function NarudzbePage() {
                 <thead>
                   <tr>
                     <th>#</th>
-                    <th>Bicikl</th>
+                    <th>Jedinica</th>
                     <th>Kol.</th>
                     <th>Cijena</th>
-                    <th />
                   </tr>
                 </thead>
                 <tbody>
                   {detalj.stavke.map((s) => (
                     <tr key={s.stavka_id}>
-                      {editStId === s.stavka_id ? (
-                        <>
-                          <td>{s.stavka_id}</td>
-                          <td>
-                            <select
-                              value={editBicikl === "" ? "" : String(editBicikl)}
-                              onChange={(e) => setEditBicikl(e.target.value ? Number(e.target.value) : "")}
-                            >
-                              {bicikli.map((b) => (
-                                <option key={b.bicikl_id} value={b.bicikl_id}>
-                                  {b.naziv} (zal. {b.kolicina})
-                                </option>
-                              ))}
-                            </select>
-                          </td>
-                          <td>
-                            <input
-                              type="number"
-                              min={1}
-                              value={editKol}
-                              onChange={(e) => setEditKol(Number(e.target.value))}
-                            />
-                          </td>
-                          <td>{s.cijena}</td>
-                          <td className="tablica-akcije">
-                            <button type="button" className="btn btn-mali" onClick={spremiStavku} disabled={!user}>
-                              Spremi
-                            </button>
-                            <button type="button" className="btn btn-mali btn-sekundarni" onClick={() => setEditStId(null)}>
-                              Odustani
-                            </button>
-                          </td>
-                        </>
-                      ) : (
-                        <>
-                          <td>{s.stavka_id}</td>
-                          <td>{s.bicikl_naziv ?? `bicikl #${s.bicikl_id}`}</td>
-                          <td>{s.kolicina}</td>
-                          <td>{s.cijena}</td>
-                          <td className="tablica-akcije">
-                            <button
-                              type="button"
-                              className="btn btn-mali btn-sekundarni"
-                              disabled={!user}
-                              onClick={() => {
-                                setEditStId(s.stavka_id);
-                                setEditBicikl(s.bicikl_id);
-                                setEditKol(s.kolicina);
-                              }}
-                            >
-                              Uredi
-                            </button>
-                            <button type="button" className="btn btn-mali" disabled={!user} onClick={() => void obrisiStavku(s.stavka_id)}>
-                              Obriši
-                            </button>
-                          </td>
-                        </>
-                      )}
+                      <td>{s.stavka_id}</td>
+                      <td>
+                        #{s.jedinica_id} · {s.bicikl_inventarni_broj ?? "?"} · {s.bicikl_naziv ?? "?"}
+                      </td>
+                      <td>{s.kolicina}</td>
+                      <td>{s.cijena}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
-            </div>
-
-            <div className="forma-blok">
-              <h4>Nova stavka</h4>
-              <label>
-                Bicikl
-                <select
-                  value={novaStBicikl === "" ? "" : String(novaStBicikl)}
-                  onChange={(e) => setNovaStBicikl(e.target.value ? Number(e.target.value) : "")}
-                >
-                  <option value="">— odaberi —</option>
-                  {bicikli.map((b) => (
-                    <option key={b.bicikl_id} value={b.bicikl_id}>
-                      {b.naziv} (zal. {b.kolicina})
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                Količina
-                <input
-                  type="number"
-                  min={1}
-                  value={novaStKol}
-                  onChange={(e) => setNovaStKol(Number(e.target.value))}
-                />
-              </label>
-              <button type="button" className="btn" onClick={dodajStavku} disabled={!user}>
-                Dodaj stavku
-              </button>
             </div>
           </>
         )}

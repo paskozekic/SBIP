@@ -8,7 +8,7 @@ type NajamRed = {
   datum_zavrsetka: string;
   status_najma: string;
   ukupna_cijena: string;
-  bicikl_id: number;
+  jedinica_id: number;
   bicikl_naziv: string | null;
   kupac_korisnik_id: number;
   kupac_ime: string | null;
@@ -63,7 +63,7 @@ export default function NajmoviPage() {
     <div className="panel">
       <h2>Najmovi</h2>
       {greska && <p className="greska">{greska}</p>}
-      <h3>Obavijest: kašnjenje &gt; 24 h (FZ-08)</h3>
+      <h3>Obavijest: kašnjenje duže od 24 sata</h3>
       {kasni.length === 0 ? (
         <p className="hint">Nema aktivnih najmova s kašnjenjem.</p>
       ) : (
@@ -81,7 +81,7 @@ export default function NajmoviPage() {
           <thead>
             <tr>
               <th>#</th>
-              <th>Bicikl</th>
+              <th>Jedinica / model</th>
               <th>Kupac</th>
               <th>Od–do</th>
               <th>Status</th>
@@ -93,7 +93,9 @@ export default function NajmoviPage() {
             {lista.map((n) => (
               <tr key={n.najam_id}>
                 <td>{n.najam_id}</td>
-                <td>{n.bicikl_naziv}</td>
+                <td>
+                  #{n.jedinica_id} · {n.bicikl_naziv}
+                </td>
                 <td>
                   {n.kupac_prezime} {n.kupac_ime}
                 </td>

@@ -57,4 +57,12 @@ export class KategorijaRepository {
     );
     return Number(res.rows[0]?.c ?? 0);
   }
+
+  async listBiciklIdsZaKategoriju(kategorijaId: number): Promise<number[]> {
+    const res = await pool.query<{ bicikl_id: number }>(
+      `SELECT bicikl_id FROM bicikl WHERE kategorija_id = $1 ORDER BY bicikl_id`,
+      [kategorijaId],
+    );
+    return res.rows.map((r) => r.bicikl_id);
+  }
 }

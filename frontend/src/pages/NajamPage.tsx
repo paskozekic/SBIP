@@ -2,12 +2,14 @@ import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { ApiError, apiJson } from "../lib/api";
 
-type BiciklKatalog = {
+/** Jedna fizička jedinica za najam (iz kataloga jedinica). */
+type JedinicaNajam = {
+  jedinica_id: number;
   bicikl_id: number;
+  inventarni_broj: string;
   naziv: string;
   cijena_najma_po_danu: string | null;
   status: string;
-  kolicina: number;
 };
 
 function cijenaNajmaBroj(v: string | null | undefined): number {
@@ -17,8 +19,8 @@ function cijenaNajmaBroj(v: string | null | undefined): number {
 
 export default function NajamPage() {
   const { user } = useAuth();
-  const [bicikli, setBicikli] = useState<BiciklKatalog[]>([]);
-  const [biciklId, setBiciklId] = useState("");
+  const [jedinice, setJedinice] = useState<JedinicaNajam[]>([]);
+  const [jedinicaId, setJedinicaId] = useState("");
   const [od, setOd] = useState("");
   const [doDat, setDoDat] = useState("");
   const [greska, setGreska] = useState<string | null>(null);
@@ -28,14 +30,16 @@ export default function NajamPage() {
   const load = useCallback(async () => {
     setListaGreska(null);
     try {
-      const list = await apiJson<BiciklKatalog[]>("/api/katalog/bicikli?samo_dostupni=1");
-      setBicikli(list.filter((b) => {
-        const n = cijenaNajmaBroj(b.cijena_najma_po_danu);
-        return !Number.isNaN(n) && n > 0;
-      }));
+      const list = await apiJson<JedinicaNajam[]>("/api/katalog/bicikli/jedinice?samo_dostupni=1");
+      setJedinice(
+        list.filter((j) => {
+          const n = cijenaNajmaBroj(j.cijena_najma_po_danu);
+          return !Number.isNaN(n) && n > 0;
+        }),
+      );
     } catch (e) {
       setListaGreska(e instanceof Error ? e.message : "Greška pri učitavanju ponude");
-      setBicikli([]);
+      setJedinice([]);
     }
   }, []);
 
@@ -51,7 +55,7 @@ export default function NajamPage() {
     return Math.floor((b.getTime() - a.getTime()) / 86400000) + 1;
   }
 
-  const odabrani = bicikli.find((x) => String(x.bicikl_id) === biciklId);
+  const odabrani = jedinice.find((x) => String(x.jedinica_id) === jedinicaId);
   const cijenaDan = odabrani ? cijenaNajmaBroj(odabrani.cijena_najma_po_danu) : 0;
   const cijenaDanOk = !Number.isNaN(cijenaDan) && cijenaDan > 0;
   const ukupno = dana() > 0 && cijenaDanOk ? (dana() * cijenaDan).toFixed(2) : "0.00";
@@ -64,7 +68,7 @@ export default function NajamPage() {
       setGreska("Rezervaciju može napraviti samo prijavljeni kupac.");
       return;
     }
-    if (!biciklId || !od || !doDat) {
+    if (!jedinicaId || !od || !doDat) {
       setGreska("Popuni sva polja.");
       return;
     }
@@ -73,7 +77,7 @@ export default function NajamPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          bicikl_id: Number(biciklId),
+          jedinica_id: Number(jedinicaId),
           datum_pocetka: od,
           datum_zavrsetka: doDat,
         }),
@@ -90,24 +94,22 @@ export default function NajamPage() {
       <h2>Rezervacija najma</h2>
       {!user && <p className="hint">Prijavite se kao kupac.</p>}
       {listaGreska && <p className="greska">{listaGreska}</p>}
-      {!listaGreska && bicikli.length === 0 && (
+      {!listaGreska && jedinice.length === 0 && (
         <p className="hint">
-          Nema bicikala za najam: trebaju biti <strong>DOSTUPAN</strong>, s <strong>zalihom &gt; 0</strong> i{" "}
-          <strong>cijenom najma/dan</strong> (djelatnik: stranica Bicikli). Nakon dodavanja stupca u bazu često
-          su sve cijene najma prazne — ponovno pokrenite <code>SPIB_migrate_from_pre_spec.sql</code> da se
-          automatski popune za dostupne bicikle.
+          Nema jedinica za najam: trebaju biti u statusu <strong>Dostupan</strong>, s postavljenom{" "}
+          <strong>cijenom najma po danu</strong> na vrsti modela (djelatnik: Bicikli → uredi vrstu).
         </p>
       )}
       {greska && <p className="greska">{greska}</p>}
       {uspjeh && <p className="hint">{uspjeh}</p>}
       <form className="forma-blok" onSubmit={rezerviraj}>
         <label>
-          Bicikl
-          <select value={biciklId} onChange={(e) => setBiciklId(e.target.value)} required>
+          Bicikl (jedinica)
+          <select value={jedinicaId} onChange={(e) => setJedinicaId(e.target.value)} required>
             <option value="">— odaberi —</option>
-            {bicikli.map((b) => (
-              <option key={b.bicikl_id} value={b.bicikl_id}>
-                {b.naziv} ({b.cijena_najma_po_danu} €/dan)
+            {jedinice.map((j) => (
+              <option key={j.jedinica_id} value={j.jedinica_id}>
+                #{j.jedinica_id} · {j.inventarni_broj} · {j.naziv} ({j.cijena_najma_po_danu} €/dan)
               </option>
             ))}
           </select>

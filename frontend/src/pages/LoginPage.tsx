@@ -40,7 +40,8 @@ export default function LoginPage() {
       </form>
       <p className="hint">
         Demo: kupac <code>iva.narucitelj@spi.local</code> / <code>demo</code> · djelatnik{" "}
-        <code>petra.djelatnik@spi.local</code> / <code>demo</code>
+        <code>petra.djelatnik@spi.local</code> / <code>demo</code> · administrator{" "}
+        <code>admin@spi.local</code> / <code>demo</code>
       </p>
       <p>
         <Link to="/registracija">Registracija (novi kupac)</Link>

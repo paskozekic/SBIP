@@ -20,9 +20,9 @@ export class IzvjestajiRepository {
          COALESCE(SUM(sn.kolicina), 0)::int AS broj_stavki
        FROM narudzba n
        JOIN stavkanarudzbe sn ON sn.narudzba_id = n.narudzba_id
-       WHERE n.status = 'ZAVRSENA'
-         AND n.datum::date >= $1::date
-         AND n.datum::date <= $2::date`,
+       WHERE (n.prodaja_obradena = TRUE OR n.status = 'ZAVRSENA')
+         AND COALESCE(n.datum_zavrsetka, n.datum)::date >= $1::date
+         AND COALESCE(n.datum_zavrsetka, n.datum)::date <= $2::date`,
       [od, doDat],
     );
     return (

@@ -42,7 +42,7 @@ export async function registerNajamRoutes(app: FastifyInstance): Promise<void> {
     const b = request.body as Record<string, unknown>;
     try {
       const row = await service.kreiraj(kupacId, {
-        bicikl_id: Number(b.bicikl_id),
+        jedinica_id: Number(b.jedinica_id ?? b.bicikl_id),
         datum_pocetka: String(b.datum_pocetka ?? ""),
         datum_zavrsetka: String(b.datum_zavrsetka ?? ""),
       });
