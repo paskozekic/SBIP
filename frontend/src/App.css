@@ -1,96 +1,173 @@
+/* SPIB — Faza C, vizualni sloj */
+
 .spib {
-  max-width: 1100px;
+  --spib-ink: #0f172a;
+  --spib-muted: #64748b;
+  --spib-brand: #0d6b4a;
+  --spib-brand-hover: #095c3f;
+  --spib-brand-soft: rgba(13, 107, 74, 0.1);
+  --spib-surface: #ffffff;
+  --spib-surface-2: #f8fafc;
+  --spib-border: #e2e8f0;
+  --spib-shadow: 0 1px 3px rgba(15, 23, 42, 0.06), 0 8px 24px rgba(15, 23, 42, 0.06);
+  --spib-radius: 12px;
+  --spib-radius-sm: 8px;
+  --spib-font: "Segoe UI", system-ui, -apple-system, sans-serif;
+
+  max-width: 1120px;
   margin: 0 auto;
-  padding: 1.5rem 1.25rem 2.5rem;
-  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-  line-height: 1.5;
-  color: #1a1a1a;
+  padding: 1.75rem 1.35rem 3rem;
+  font-family: var(--spib-font);
+  line-height: 1.55;
+  color: var(--spib-ink);
 }
 
 .spib-layout {
-  max-width: 1100px;
+  max-width: 1120px;
+}
+
+/* Reset Vite/global naslova unutar aplikacije */
+.spib h1,
+.spib h2,
+.spib h3,
+.spib h4 {
+  font-family: var(--spib-font);
+  font-weight: 600;
+  color: var(--spib-ink);
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.spib-header {
+  margin-bottom: 0.25rem;
+}
+
+.spib-header-card {
+  padding: 1.25rem 1.35rem 1.1rem;
+  background: var(--spib-surface);
+  border: 1px solid var(--spib-border);
+  border-radius: var(--spib-radius);
+  box-shadow: var(--spib-shadow);
+  margin-bottom: 1rem;
 }
 
 .spib-header h1 {
-  margin: 0;
-  font-size: 1.75rem;
+  font-size: clamp(1.65rem, 4vw, 2rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  background: linear-gradient(120deg, #0f172a 0%, #0d6b4a 55%, #0f766e 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 .podnaslov {
-  margin: 0.25rem 0 1rem;
-  color: #555;
-  font-size: 0.95rem;
+  margin: 0.35rem 0 1.25rem;
+  color: var(--spib-muted);
+  font-size: 0.92rem;
+  font-weight: 400;
 }
 
 .nav-glava {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.35rem;
-  margin-bottom: 1.5rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid #e0e0e0;
+  gap: 0.5rem;
+  margin-bottom: 1.75rem;
+  padding: 0.35rem;
+  background: var(--spib-surface);
+  border: 1px solid var(--spib-border);
+  border-radius: var(--spib-radius);
+  box-shadow: var(--spib-shadow);
 }
 
 .nav-a {
   display: inline-block;
-  padding: 0.45rem 0.9rem;
-  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  border-radius: var(--spib-radius-sm);
   text-decoration: none;
-  color: #1a5f9e;
-  font-weight: 500;
+  color: var(--spib-muted);
+  font-weight: 600;
+  font-size: 0.9rem;
   border: 1px solid transparent;
+  transition:
+    color 0.15s ease,
+    background 0.15s ease,
+    border-color 0.15s ease;
 }
 
 .nav-a:hover {
-  background: #f0f7fc;
+  color: var(--spib-brand);
+  background: var(--spib-brand-soft);
 }
 
 .nav-a--aktivno {
-  background: #1a5f9e;
+  background: var(--spib-brand);
   color: #fff;
-  border-color: #154a7a;
+  border-color: var(--spib-brand-hover);
+  box-shadow: 0 2px 8px rgba(13, 107, 74, 0.25);
 }
 
 .spib-main section h2 {
-  margin: 0 0 0.75rem;
+  margin: 0 0 0.85rem;
   font-size: 1.2rem;
 }
 
+.spib-main section h3 {
+  margin: 1.25rem 0 0.6rem;
+  font-size: 1.05rem;
+}
+
+.spib-main section h4 {
+  margin: 0 0 0.5rem;
+  font-size: 0.95rem;
+  color: var(--spib-muted);
+}
+
 .hint {
-  margin: 0 0 0.75rem;
-  font-size: 0.85rem;
-  color: #666;
+  margin: 0 0 0.85rem;
+  font-size: 0.88rem;
+  color: var(--spib-muted);
 }
 
 .status code,
 .hint code {
-  background: #f0f0f0;
-  padding: 0.1em 0.35em;
-  border-radius: 4px;
-  font-size: 0.9em;
+  background: var(--spib-surface-2);
+  padding: 0.15em 0.45em;
+  border-radius: 6px;
+  font-size: 0.88em;
+  border: 1px solid var(--spib-border);
 }
 
 .greska {
-  color: #b00020;
+  color: #b91c1c;
   font-size: 0.9rem;
   margin: 0.5rem 0;
+  padding: 0.5rem 0.75rem;
+  background: #fef2f2;
+  border-radius: var(--spib-radius-sm);
+  border: 1px solid #fecaca;
 }
 
 .poruka {
-  color: #0d6b3a;
+  color: #047857;
   font-size: 0.9rem;
   margin: 0.5rem 0;
+  padding: 0.5rem 0.75rem;
+  background: #ecfdf5;
+  border-radius: var(--spib-radius-sm);
+  border: 1px solid #a7f3d0;
 }
 
 .panel {
-  border: 1px solid #e0e0e0;
-  border-radius: 10px;
-  padding: 1rem 1rem 1.25rem;
-  background: #fafafa;
+  border: 1px solid var(--spib-border);
+  border-radius: var(--spib-radius);
+  padding: 1.1rem 1.15rem 1.35rem;
+  background: var(--spib-surface);
+  box-shadow: var(--spib-shadow);
 }
 
 .panel--siroko {
-  min-height: 280px;
+  min-height: 300px;
 }
 
 .panel-head {
@@ -98,18 +175,18 @@
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.85rem;
 }
 
 .panel-head h2 {
   margin: 0;
-  font-size: 1.1rem;
+  font-size: 1.08rem;
 }
 
 .grid-dva {
   display: grid;
-  grid-template-columns: minmax(220px, 280px) 1fr;
-  gap: 1rem;
+  grid-template-columns: minmax(240px, 300px) 1fr;
+  gap: 1.25rem;
   align-items: start;
 }
 
@@ -122,71 +199,109 @@
 .forma-blok {
   display: flex;
   flex-direction: column;
-  gap: 0.65rem;
+  gap: 0.75rem;
   margin-bottom: 1rem;
-  padding: 0.75rem;
-  background: #fff;
-  border: 1px solid #e8e8e8;
-  border-radius: 8px;
+  padding: 1rem 1.1rem;
+  background: var(--spib-surface-2);
+  border: 1px solid var(--spib-border);
+  border-radius: var(--spib-radius-sm);
 }
 
 .forma-blok--zag {
-  margin-bottom: 1.25rem;
+  margin-bottom: 1.35rem;
+  background: var(--spib-surface);
 }
 
 .forma-blok--filter {
   flex-direction: row;
   flex-wrap: wrap;
   align-items: flex-end;
+  gap: 0.75rem 1rem;
 }
 
 .forma-blok label {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: #333;
+  gap: 0.35rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #334155;
 }
 
 .forma-blok input,
 .forma-blok select,
 .forma-blok textarea {
   font: inherit;
-  padding: 0.4rem 0.5rem;
-  border: 1px solid #ccc;
-  border-radius: 6px;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid var(--spib-border);
+  border-radius: var(--spib-radius-sm);
   max-width: 100%;
+  background: var(--spib-surface);
+  color: var(--spib-ink);
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.forma-blok input:hover,
+.forma-blok select:hover,
+.forma-blok textarea:hover {
+  border-color: #cbd5e1;
+}
+
+.forma-blok input:focus,
+.forma-blok select:focus,
+.forma-blok textarea:focus {
+  outline: none;
+  border-color: var(--spib-brand);
+  box-shadow: 0 0 0 3px var(--spib-brand-soft);
 }
 
 .btn {
   align-self: flex-start;
   font: inherit;
   cursor: pointer;
-  padding: 0.45rem 0.95rem;
-  border-radius: 8px;
-  border: 1px solid #1a5f9e;
-  background: #1a5f9e;
+  padding: 0.5rem 1.1rem;
+  border-radius: var(--spib-radius-sm);
+  border: 1px solid var(--spib-brand);
+  background: var(--spib-brand);
   color: #fff;
-  font-weight: 500;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition:
+    background 0.15s ease,
+    transform 0.08s ease,
+    box-shadow 0.15s ease;
 }
 
 .btn:hover {
-  background: #154a7a;
+  background: var(--spib-brand-hover);
+  box-shadow: 0 4px 14px rgba(13, 107, 74, 0.28);
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--spib-brand-soft);
 }
 
 .btn-sekundarni {
-  background: #fff;
-  color: #1a5f9e;
+  background: var(--spib-surface);
+  color: var(--spib-brand);
+  box-shadow: none;
 }
 
 .btn-sekundarni:hover {
-  background: #f0f7fc;
+  background: var(--spib-brand-soft);
+  box-shadow: none;
 }
 
 .btn-mali {
-  padding: 0.25rem 0.55rem;
-  font-size: 0.82rem;
+  padding: 0.32rem 0.65rem;
+  font-size: 0.8rem;
 }
 
 .btn-row {
@@ -198,13 +313,13 @@
 .lista-nar {
   list-style: none;
   margin: 0;
-  padding: 0;
-  max-height: 60vh;
+  padding: 0.25rem 0 0;
+  max-height: 58vh;
   overflow: auto;
 }
 
 .lista-nar li {
-  margin-bottom: 0.35rem;
+  margin-bottom: 0.45rem;
 }
 
 .lista-nar__btn {
@@ -212,78 +327,101 @@
   text-align: left;
   font: inherit;
   cursor: pointer;
-  padding: 0.5rem 0.65rem;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  background: #fff;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--spib-border);
+  border-radius: var(--spib-radius-sm);
+  background: var(--spib-surface);
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .lista-nar__btn:hover {
-  border-color: #1a5f9e;
+  border-color: var(--spib-brand);
+  background: var(--spib-brand-soft);
 }
 
 .lista-nar__btn--akt {
-  border-color: #1a5f9e;
-  background: #e8f2fa;
+  border-color: var(--spib-brand);
+  background: linear-gradient(135deg, rgba(13, 107, 74, 0.12) 0%, rgba(15, 118, 110, 0.08) 100%);
+  box-shadow: inset 0 0 0 1px rgba(13, 107, 74, 0.2);
 }
 
 .lista-nar__id {
   font-weight: 700;
-  margin-right: 0.35rem;
+  margin-right: 0.4rem;
+  color: var(--spib-brand);
 }
 
 .lista-nar__meta {
   font-size: 0.88rem;
+  color: #334155;
 }
 
 .lista-nar__dat {
   display: block;
   font-size: 0.75rem;
-  color: #777;
-  margin-top: 0.15rem;
+  color: var(--spib-muted);
+  margin-top: 0.2rem;
 }
 
 .table-wrap {
   overflow-x: auto;
   margin: 0.5rem 0 1rem;
+  border-radius: var(--spib-radius-sm);
+  border: 1px solid var(--spib-border);
 }
 
 .tablica {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.9rem;
-  background: #fff;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  overflow: hidden;
+  font-size: 0.88rem;
+  background: var(--spib-surface);
 }
 
 .tablica th,
 .tablica td {
-  padding: 0.45rem 0.6rem;
-  border-bottom: 1px solid #eee;
+  padding: 0.55rem 0.75rem;
+  border-bottom: 1px solid var(--spib-border);
   text-align: left;
   vertical-align: middle;
 }
 
+.tablica tbody tr:nth-child(even) {
+  background: #fafbfc;
+}
+
+.tablica tbody tr:hover {
+  background: #f1f5f9;
+}
+
 .tablica th {
-  background: #f3f3f3;
+  background: linear-gradient(180deg, #f1f5f9 0%, #e8eef4 100%);
   font-weight: 600;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--spib-muted);
 }
 
 .tablica-akcije {
   white-space: nowrap;
   display: flex;
   flex-wrap: wrap;
-  gap: 0.35rem;
+  gap: 0.4rem;
 }
 
 .tablica-opis {
   max-width: 320px;
-  color: #555;
-  font-size: 0.88rem;
+  color: var(--spib-muted);
+  font-size: 0.86rem;
 }
 
 .kategorije-page .forma-blok--filter label {
   flex: 1 1 200px;
+}
+
+.kategorije-page > h2 {
+  margin-bottom: 0.5rem;
 }
