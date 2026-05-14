@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
-import type { BiciklRepository } from "../infrastructure/biciklRepository.js";
-import type { KategorijaRepository } from "../infrastructure/kategorijaRepository.js";
-import { KategorijaService } from "./kategorijaService.js";
+import type { BiciklRepository } from "../../../src/infrastructure/biciklRepository.js";
+import type { KategorijaRepository } from "../../../src/infrastructure/kategorijaRepository.js";
+import { KategorijaService } from "../../../src/application/kategorijaService.js";
 
 function makeService(deps: {
   repo?: Partial<KategorijaRepository>;

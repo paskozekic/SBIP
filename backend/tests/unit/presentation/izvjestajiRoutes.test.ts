@@ -1,7 +1,7 @@
 import Fastify from "fastify";
 import { describe, expect, it } from "vitest";
-import { signAccessToken } from "../lib/jwt.js";
-import { registerIzvjestajiRoutes } from "./izvjestajiRoutes.js";
+import { signAccessToken } from "../../../src/lib/jwt.js";
+import { registerIzvjestajiRoutes } from "../../../src/presentation/izvjestajiRoutes.js";
 
 describe("registerIzvjestajiRoutes", () => {
   it("GET /izvjestaji/prodaja vraća 403 za djelatnika", async () => {

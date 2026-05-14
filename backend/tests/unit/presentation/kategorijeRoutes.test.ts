@@ -1,7 +1,7 @@
 import Fastify from "fastify";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { KategorijaService } from "../application/kategorijaService.js";
-import { registerKategorijeRoutes } from "./kategorijeRoutes.js";
+import type { KategorijaService } from "../../../src/application/kategorijaService.js";
+import { registerKategorijeRoutes } from "../../../src/presentation/kategorijeRoutes.js";
 
 describe("registerKategorijeRoutes", () => {
   const mockList = vi.fn();

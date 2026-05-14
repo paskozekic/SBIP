@@ -1,8 +1,8 @@
 import Fastify from "fastify";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { NarudzbaService } from "../application/narudzbaService.js";
-import { signAccessToken } from "../lib/jwt.js";
-import { registerNarudzbeRoutes } from "./narudzbeRoutes.js";
+import type { NarudzbaService } from "../../../src/application/narudzbaService.js";
+import { signAccessToken } from "../../../src/lib/jwt.js";
+import { registerNarudzbeRoutes } from "../../../src/presentation/narudzbeRoutes.js";
 
 describe("registerNarudzbeRoutes", () => {
   const mockList = vi.fn();

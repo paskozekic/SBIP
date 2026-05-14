@@ -1,13 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { pool } from "./pool.js";
+import { pool } from "../../../src/infrastructure/pool.js";
 
-vi.mock("./pool.js", () => ({
+vi.mock("../../../src/infrastructure/pool.js", () => ({
   pool: {
     query: vi.fn(),
   },
 }));
 
-import { KategorijaRepository } from "./kategorijaRepository.js";
+import { KategorijaRepository } from "../../../src/infrastructure/kategorijaRepository.js";
 
 describe("KategorijaRepository", () => {
   beforeEach(() => {

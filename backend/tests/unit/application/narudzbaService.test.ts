@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
-import type { NarudzbaDetaljRow, NarudzbaListRow } from "../domain/narudzba.js";
-import type { NarudzbaRepository } from "../infrastructure/narudzbaRepository.js";
-import { NarudzbaService } from "./narudzbaService.js";
+import type { NarudzbaDetaljRow, NarudzbaListRow } from "../../../src/domain/narudzba.js";
+import type { NarudzbaRepository } from "../../../src/infrastructure/narudzbaRepository.js";
+import { NarudzbaService } from "../../../src/application/narudzbaService.js";
 
 function mkDetalj(over: Partial<NarudzbaDetaljRow> = {}): NarudzbaDetaljRow {
   return {

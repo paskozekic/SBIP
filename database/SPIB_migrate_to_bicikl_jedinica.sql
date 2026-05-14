@@ -1,23 +1,7 @@
--- =============================================================================
--- Migracija: dodaje tablicu bicikl_jedinica i prebacuje podatke sa starog modela
---   (jedan red bicikl = jedna skladišna jedinica + kolicina/status na bicikl)
---   na novi model: bicikl = vrsta, bicikl_jedinica = pojedinačne jedinice.
---
--- Pokretanje (nakon backupa ako ima pravih podataka):
---   psql -U spib -d spib -h localhost -f database/SPIB_migrate_to_bicikl_jedinica.sql
---
--- Idempotentno (ponovni pokušaj): nadopunjava samo nedostajuće jedinice po
--- bicikl_id (brojač u odnosu na bicikl.kolicina). Za čistu bazu: docker compose down -v.
---
--- Pretpostavke: dovoljno jedinica po bicikl_id (zaliha) za zbroj stavki po tom modelu;
---   stavke s količinom > 1 automatski se dijele u više redova (količina = 1).
--- =============================================================================
 
 BEGIN;
 
--- ---------------------------------------------------------------------------
--- 1) Kreiraj bicikl_jedinica ako nedostaje
--- ---------------------------------------------------------------------------
+
 CREATE TABLE IF NOT EXISTS bicikl_jedinica (
     jedinica_id SERIAL PRIMARY KEY,
     bicikl_id INT NOT NULL
@@ -35,9 +19,7 @@ CREATE INDEX IF NOT EXISTS idx_jedinica_status ON bicikl_jedinica (status);
 
 COMMENT ON TABLE bicikl_jedinica IS 'Pojedinačna skladišna jedinica (inventar, status).';
 
--- ---------------------------------------------------------------------------
--- 2) Popuni jedinice iz starog stupca bicikl (kolicina × po redu)
--- ---------------------------------------------------------------------------
+
 DO $$
 DECLARE
   has_kolicina boolean;
@@ -87,11 +69,11 @@ BEGIN
   END IF;
 END $$;
 
--- Jedinstveni inventarni: uvijek JB-<jedinica_id> (izbjegava koliziju s kopiranim JB-* s bicikl)
+
 UPDATE bicikl_jedinica j
 SET inventarni_broj = 'JB-' || lpad(j.jedinica_id::text, 6, '0');
 
--- Nadopuna jedinica ako zbroj stavki (količina) po modelu premašuje postojeću zalihu
+
 INSERT INTO bicikl_jedinica (bicikl_id, inventarni_broj, status)
 SELECT v.bicikl_id, 'MIG-X-' || v.bicikl_id::text || '-' || gs::text, 'DOSTUPAN'
 FROM (
@@ -112,9 +94,7 @@ WHERE EXISTS (
 UPDATE bicikl_jedinica j
 SET inventarni_broj = 'JB-' || lpad(j.jedinica_id::text, 6, '0');
 
--- ---------------------------------------------------------------------------
--- 3) StavkaNarudzbe: bicikl_id → jedinica_id
--- ---------------------------------------------------------------------------
+
 DO $$
 DECLARE
   has_bicikl_on_stavka boolean;
@@ -193,9 +173,7 @@ BEGIN
   END IF;
 END $$;
 
--- ---------------------------------------------------------------------------
--- 4) Najam: bicikl_id → jedinica_id
--- ---------------------------------------------------------------------------
+
 DO $$
 DECLARE
   has_bicikl_on_najam boolean;
@@ -256,9 +234,7 @@ END $$;
 CREATE INDEX IF NOT EXISTS idx_stavka_jedinica ON stavkanarudzbe (jedinica_id);
 CREATE INDEX IF NOT EXISTS idx_najam_jedinica ON najam (jedinica_id);
 
--- ---------------------------------------------------------------------------
--- 5) Ukloni stupce vrste koji su sada na jedinici
--- ---------------------------------------------------------------------------
+
 ALTER TABLE bicikl DROP COLUMN IF EXISTS kolicina;
 ALTER TABLE bicikl DROP COLUMN IF EXISTS status;
 ALTER TABLE bicikl DROP COLUMN IF EXISTS inventarni_broj;
