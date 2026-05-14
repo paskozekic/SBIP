@@ -18,7 +18,7 @@ Sučelje: **http://localhost:5173**
 
 | Put | Opis |
 |-----|------|
-| `/` | Početna, provjera `/api/health` |
+| `/` | Početna — dobrodošlica i brzi pristup ostalim stranicama |
 | `/narudzbe` | Master–detail narudžbe + stavke |
 | `/kategorije` | Šifrarnik kategorija (CRUD + pretraga) |
 
