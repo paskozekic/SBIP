@@ -41,8 +41,11 @@ CREATE TABLE Bicikl (
     naziv VARCHAR(100) NOT NULL,
     cijena DECIMAL(10,2) NOT NULL CHECK (cijena >= 0),
     kolicina INT NOT NULL CHECK (kolicina >= 0),
-    status VARCHAR(30) NOT NULL,
+    status VARCHAR(30) NOT NULL
+        CONSTRAINT chk_bicikl_status
+        CHECK (status IN ('DOSTUPAN', 'IZNAJMLJEN', 'PRODAN', 'U_SERVISU', 'NEDOSTUPAN')),
     kategorija_id INT NOT NULL,
+    cijena_najma_po_danu DECIMAL(10,2) CHECK (cijena_najma_po_danu IS NULL OR cijena_najma_po_danu >= 0),
     CONSTRAINT fk_bicikl_kategorija
         FOREIGN KEY (kategorija_id)
         REFERENCES KategorijaBicikla(kategorija_id)
@@ -52,7 +55,14 @@ CREATE TABLE Bicikl (
 CREATE TABLE Narudzba (
     narudzba_id SERIAL PRIMARY KEY,
     datum TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    status VARCHAR(30) NOT NULL,
+    status VARCHAR(30) NOT NULL
+        CONSTRAINT chk_narudzba_status
+        CHECK (status IN ('NOVA', 'POTVRDJENA', 'U_OBRADI', 'ZAVRSENA', 'OTKAZANA')),
+    adresa_dostave VARCHAR(500) NOT NULL DEFAULT '',
+    nacin_placanja VARCHAR(30) NOT NULL DEFAULT 'POUZEĆE'
+        CONSTRAINT chk_nacin_placanja
+        CHECK (nacin_placanja IN ('KARTICA', 'POUZEĆE', 'TRANSAKCIJSKI_RACUN')),
+    prodaja_obradena BOOLEAN NOT NULL DEFAULT FALSE,
     kupac_korisnik_id INT NOT NULL,
     djelatnik_korisnik_id INT,
     CONSTRAINT fk_narudzba_kupac
@@ -85,7 +95,10 @@ CREATE TABLE Najam (
     najam_id SERIAL PRIMARY KEY,
     datum_pocetka DATE NOT NULL,
     datum_zavrsetka DATE NOT NULL,
-    status_najma VARCHAR(30) NOT NULL,
+    status_najma VARCHAR(30) NOT NULL
+        CONSTRAINT chk_najam_status
+        CHECK (status_najma IN ('AKTIVAN', 'VRACEN')),
+    ukupna_cijena DECIMAL(10,2) NOT NULL CHECK (ukupna_cijena >= 0),
     bicikl_id INT NOT NULL,
     djelatnik_korisnik_id INT,
     kupac_korisnik_id INT NOT NULL,

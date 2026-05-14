@@ -13,6 +13,9 @@ export type NarudzbaListRow = {
   narudzba_id: number;
   datum: string;
   status: string;
+  adresa_dostave: string;
+  nacin_placanja: string;
+  prodaja_obradena: boolean;
   kupac_korisnik_id: number;
   djelatnik_korisnik_id: number | null;
   kupac_ime: string;

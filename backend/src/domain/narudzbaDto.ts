@@ -19,6 +19,8 @@ export type NarudzbaListDto = {
   narudzba_id: number;
   datum: string;
   status: string;
+  adresa_dostave: string;
+  nacin_placanja: string;
   kupac_korisnik_id: number;
   kupac_ime: string;
   kupac_prezime: string;
@@ -32,17 +34,21 @@ export type NarudzbaDetaljDto = NarudzbaListDto & {
   stavke: StavkaNarudzbeDto[];
 };
 
-/** Ulaz: nova narudžba */
+/** Ulaz: nova narudžba — `status` je jedan od kanonskih kodova (vidi `narudzbaStatus.ts`) */
 export type NarudzbaCreateDto = {
   status: string;
   kupac_korisnik_id: number;
   djelatnik_korisnik_id?: number | null;
+  adresa_dostave: string;
+  nacin_placanja: string;
 };
 
-/** Ulaz: ažuriranje zaglavlja */
+/** Ulaz: ažuriranje zaglavlja — `status` ako je poslan, kanonski kod */
 export type NarudzbaUpdateDto = {
   status?: string;
   djelatnik_korisnik_id?: number | null;
+  adresa_dostave?: string;
+  nacin_placanja?: string;
 };
 
 /** Ulaz: nova stavka (cijena se uzima iz kataloga bicikla — poslovno pravilo) */

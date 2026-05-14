@@ -24,7 +24,11 @@ export class ReferenceDataRepository {
 
   async listBicikli(): Promise<BiciklOption[]> {
     const res = await pool.query<BiciklOption>(
-      `SELECT bicikl_id, naziv, kolicina, cijena::text AS cijena
+      `SELECT bicikl_id,
+              naziv,
+              kolicina,
+              cijena::text AS cijena,
+              cijena_najma_po_danu::text AS cijena_najma_po_danu
        FROM bicikl
        ORDER BY naziv`,
     );

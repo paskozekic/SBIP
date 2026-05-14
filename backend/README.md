@@ -45,6 +45,7 @@ API sluša na **http://localhost:3000** (ili `PORT` iz `.env`).
 | PUT | `/api/kategorije/:id` | Ažuriranje (isto tijelo kao **PATCH**) |
 | PATCH | `/api/kategorije/:id` | Ažuriranje (isto kao PUT) |
 | DELETE | `/api/kategorije/:id` | Brisanje (409 ako postoje bicikli) |
+| GET | `/api/narudzbe/statusi` | Dopušteni statusi narudžbe: `{ "kod", "naziv" }[]` (isti skup kao u bazi i validacija) |
 | GET | `/api/narudzbe` | Lista narudžbi (JOIN: **ime i prezime kupca**) |
 | GET | `/api/narudzbe/:id` | **Master–detail:** zaglavlje + `stavke[]` + imena kupca i djelatnika |
 | POST | `/api/narudzbe` | Nova narudžba — `{ "status", "kupac_korisnik_id", "djelatnik_korisnik_id?" }` |
@@ -53,7 +54,9 @@ API sluša na **http://localhost:3000** (ili `PORT` iz `.env`).
 | PATCH | `/api/narudzbe/:id/stavke/:stavkaId` | Izmjena stavke; cijena ponovno iz kataloga |
 | DELETE | `/api/narudzbe/:id/stavke/:stavkaId` | Brisanje stavke; odgovor = cijeli detalj narudžbe |
 
-## Primjeri JSON tijela (za Postman / `irm`)
+### Status narudžbe (`status`)
+
+Dopušteni **kodovi** (string, velika slova): **`NOVA`**, **`POTVRDJENA`**, **`U_OBRADI`**, **`ZAVRSENA`**, **`OTKAZANA`**. Definicija je u `src/domain/narudzbaStatus.ts`; servis pri **POST/PATCH** odbija ostale vrijednosti (**400**). Popis s hrvatskim **nazivima** za UI: **`GET /api/narudzbe/statusi`**.
 
 **Nova narudžba**
 

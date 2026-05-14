@@ -17,4 +17,5 @@ export type BiciklOption = {
   naziv: string;
   kolicina: number;
   cijena: string;
+  cijena_najma_po_danu: string | null;
 };

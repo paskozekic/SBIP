@@ -33,7 +33,14 @@ try {
 
 Dodaj dvije stavke istog `bicikl_id` tako da **zbroj** količina ostane ≤ zaliha. Treći pokušaj koji prelazi zalihu → opet **400**.
 
+## 4. Status narudžbe (dopušteni kodovi)
+
+Pri **POST** / **PATCH** zaglavlja `status` mora biti jedan od: `NOVA`, `POTVRDJENA`, `U_OBRADI`, `ZAVRSENA`, `OTKAZANA`. Pogrešan kod → **400**.
+
+Popis za UI: `GET http://localhost:3000/api/narudzbe/statusi` → JSON niz `{ "kod", "naziv" }`.
+
 ## Kriterij „§2.3 OK“
 
 - [ ] Prekoračenje zalihe → **400**, nema „tihog“ inserta  
 - [ ] Cijena na novoj/izmijenjenoj stavci odgovara **katalogu** u trenutku operacije  
+- [ ] Nevažeći `status` na narudžbi → **400**; `GET /api/narudzbe/statusi` vraća dopuštene parove `kod` / `naziv`  

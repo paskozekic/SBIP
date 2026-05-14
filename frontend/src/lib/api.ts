@@ -1,4 +1,20 @@
-/** Jednostavan fetch wrapper za JSON API (Faza C). */
+/** Jednostavan fetch wrapper za JSON API + JWT (SPIB). */
+
+const TOKEN_KEY = "spib_jwt";
+
+export function getToken(): string | null {
+  return localStorage.getItem(TOKEN_KEY);
+}
+
+export function setToken(token: string | null): void {
+  if (token) localStorage.setItem(TOKEN_KEY, token);
+  else localStorage.removeItem(TOKEN_KEY);
+}
+
+export function authHeaders(): Record<string, string> {
+  const t = getToken();
+  return t ? { Authorization: `Bearer ${t}` } : {};
+}
 
 export class ApiError extends Error {
   readonly status: number;
@@ -25,6 +41,7 @@ export async function apiJson<T>(url: string, init?: RequestInit): Promise<T> {
     ...init,
     headers: {
       Accept: "application/json",
+      ...authHeaders(),
       ...(init?.headers as Record<string, string>),
     },
   });
@@ -40,7 +57,13 @@ export async function apiJson<T>(url: string, init?: RequestInit): Promise<T> {
 }
 
 export async function apiVoid(url: string, init?: RequestInit): Promise<void> {
-  const r = await fetch(url, init);
+  const r = await fetch(url, {
+    ...init,
+    headers: {
+      ...authHeaders(),
+      ...(init?.headers as Record<string, string>),
+    },
+  });
   if (r.status === 204) return;
   const body = await parseBody(r);
   if (!r.ok) {

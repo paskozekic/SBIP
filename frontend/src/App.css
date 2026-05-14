@@ -412,6 +412,19 @@
   gap: 0.4rem;
 }
 
+.table-wrap .tablica input.tablica-cel-input,
+.table-wrap .tablica select.tablica-cel-input {
+  width: 100%;
+  min-width: 3.5rem;
+  max-width: 7.5rem;
+  font: inherit;
+  box-sizing: border-box;
+}
+
+.table-wrap .tablica input.tablica-cel-naziv {
+  max-width: 12rem;
+}
+
 .tablica-opis {
   max-width: 320px;
   color: var(--spib-muted);
@@ -479,4 +492,58 @@
   font-size: 0.9rem;
   color: var(--spib-muted);
   line-height: 1.45;
+}
+
+.spib-userbar {
+  margin-top: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  font-size: 0.95rem;
+}
+
+.kartice-katalog {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.kartica-bicikl {
+  padding: 1rem 1.1rem;
+  background: var(--spib-surface);
+  border: 1px solid var(--spib-border);
+  border-radius: var(--spib-radius);
+  box-shadow: var(--spib-shadow);
+}
+
+.kartica-bicikl h3 {
+  margin: 0 0 0.25rem;
+  font-size: 1.05rem;
+}
+
+.kartica-bicikl__meta {
+  font-size: 0.88rem;
+  color: var(--spib-muted);
+  margin: 0 0 0.35rem;
+}
+
+.status-znacka {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.chk-inline {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.izvj-blok {
+  margin-top: 1rem;
+  padding: 1rem 1.15rem;
+  border-radius: var(--spib-radius);
+  border: 1px solid var(--spib-border);
+  background: rgba(13, 107, 74, 0.04);
 }
