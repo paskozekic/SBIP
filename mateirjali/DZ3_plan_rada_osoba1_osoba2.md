@@ -12,7 +12,7 @@ Ovaj dokument sadrži **komentar na bazu**, **tko što radi u timu** i **što je
 |------|--------|----------|
 | **A** – priprema | **Gotovo** | `database/` (schema + seed), `docker-compose.yml`, korijenski `README`, `.env.example`, skeleton `backend/` prije API-ja. |
 | **B** – backend jezgra | **Gotovo i zatvoreno** | DTO/repo/servis/REST za §2 narudžba + §3 kategorije; `PUT` i **`PATCH`** na kategoriju; **`backend/README.md`** — tablica ruta + **primjeri JSON** + napomena **400** / **409**. Kontrolna lista u `docs/DZ3_FazaB_backend_obrazlozenje.md` §5 označena kao ispunjena. |
-| **C** – frontend | **Djelomično** | Vite + React + TS: **`/api/health`** i **lista kategorija** s `GET /api/kategorije` (jedna stranica). **Nema** još zaslona master–detail za narudžbu, nema forme/tablice za CRUD kategorija niti zajedničkog layouta/menija. |
+| **C** – frontend | **Gotovo (MVP)** | Vite + React + TS + **react-router-dom**: zajednički **layout/meni**, stranica **Narudžbe** (master–detail, CRUD stavki, padajuće liste preko `/api/kupci`, `/api/djelatnici`, `/api/bicikli`), stranica **Kategorije** (pretraga, tablica, CRUD). Početna: health. |
 | **D** – testovi u kodu | **Nije započeto** | Mape `backend/tests/**` postoje s `.gitkeep`; **Vitest** i stvarni testovi planirani u `backend/README.md` („Sljedeći koraci“). |
 | **E** – dokumentacija / isporuka | **Djelomično** | README + `docs/DZ3_FazaB_backend_obrazlozenje.md` + `docs/qa/` (Faza A/B, §2.1–2.4, §3). **Nema** još PDF-a predmeta niti screenshotova kompletnog UI-ja. |
 
@@ -87,18 +87,23 @@ Popis API ruta: **`backend/README.md`**. Što ručno provjeriti: **`docs/qa/`** 
 
 ---
 
-### Faza C – Frontend *(Paško — u tijeku)*
+### Faza C – Frontend *(Paško — isporučeno u repou)*
 
-**Narudžba + stavke** — *preostaje*
+**Narudžba + stavke**
 
-- Zaslon master–detail (odabir/kreiranje narudžbe, tablica stavki, padajuće liste kupac/djelatnik/bicikl), pozivi prema već postojećem API-ju, obrada grešaka.
+- Master–detail: lista narudžbi, odabir, zaglavlje (status, djelatnik), **PATCH**; tablica stavki s **dodaj / uredi / obriši**; **POST** nova narudžba (kupac, djelatnik, status).
+- Padajuće liste: podaci s **`GET /api/kupci`**, **`/api/djelatnici`**, **`/api/bicikli`** (read-only rute dodane za Fazu C).
+- Osnovna obrada grešaka (`ApiError`, poruka korisniku).
 
-**Kategorija bicikla (šifrarnik)** — *djelomično*
+**Kategorija bicikla (šifrarnik)**
 
-- **Gotovo (minimalno):** read-only prikaz liste s `GET /api/kategorije` na početnoj stranici.
-- **Preostaje:** tablica s filterom, forma za CRUD, zajednički layout/meni između narudžbe i šifrarnika.
+- Pretraga (`q` uživo), tablica, forma za **POST/PUT**, **DELETE** s potvrdom; poruke o uspjehu/grešci.
 
-**Točka spajanja (plan):** jedan `npm run dev` koji pokazuje **obje** funkcionalnosti u UI — **još nije** (trenutačno dominira samo lagani pregled kategorija + health).
+**Zajednički UI**
+
+- **`react-router-dom`**: rute `/`, `/narudzbe`, `/kategorije`; zajednički layout s navigacijom.
+
+**Točka spajanja (plan):** `npm run dev` u `frontend/` + backend — **obje** stranice dostupne. Vidi [`docs/qa/Faza-C-uvod.md`](../docs/qa/Faza-C-uvod.md).
 
 ---
 
@@ -143,4 +148,4 @@ Popis API ruta: **`backend/README.md`**. Što ručno provjeriti: **`docs/qa/`** 
 
 ## 5. Ako netko zapne – minimalni „fallback“ opseg
 
-Već je isporučeno: **API** master–detail za narudžbu (bez UI-ja), **šifrarnik kategorija** na backendu, **jedan složeniji validator** (zaliha + cijena iz kataloga). Za zatvaranje DZ3 po uputama predmeta tipično još treba: **UI** master–detail + šifrarnik u Reactu, **Vitest** (barem jedan integracijski + slojeviti testovi), **prilozi** (screenshotovi). Ostalo (najam, plaćanje u UI-ju) može čekati ako nije u obvezi — provjera s asistentom.
+Već je isporučeno: **API** master–detail za narudžbu, **šifrarnik kategorija** na backendu, **validator** (zaliha + cijena iz kataloga), **React UI** (narudžbe + kategorije, layout). Za zatvaranje DZ3 po predmetu tipično još: **Vitest** (Faza D), **prilozi** (PDF/screenshotovi stvarnih ekrana). Ostalo (najam, plaćanje u UI-ju) može čekati ako nije u obvezi — provjera s asistentom.

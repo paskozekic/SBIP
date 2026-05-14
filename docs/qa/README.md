@@ -10,7 +10,7 @@ Glavna tehnička dokumentacija zadatka: [`../DZ3_FazaB_backend_obrazlozenje.md`]
 1. `git checkout develop && git pull origin develop`
 2. Jednom: `git config core.hooksPath .githooks` (vidi korijenski [`README.md`](../../README.md))
 3. Baza: [`Faza-A.md`](Faza-A.md)
-4. Backend + (opcionalno) frontend: [`Faza-B-uvod.md`](Faza-B-uvod.md)
+4. Backend + frontend: [`Faza-B-uvod.md`](Faza-B-uvod.md); nakon Faze C i UI: [`Faza-C-uvod.md`](Faza-C-uvod.md)
 
 ## Datoteke (mapiranje na plan)
 
@@ -18,7 +18,8 @@ Glavna tehnička dokumentacija zadatka: [`../DZ3_FazaB_backend_obrazlozenje.md`]
 |----------|-------------|
 | [Faza-A.md](Faza-A.md) | Docker / Postgres, smoke test baze |
 | [STO-DODANO.md](STO-DODANO.md) | Kratak popis što je u repou (za brzi pregled) |
-| [Faza-B-uvod.md](Faza-B-uvod.md) | Pokretanje API-ja i frontenda |
+| [Faza-B-uvod.md](Faza-B-uvod.md) | Pokretanje API-ja i okoline |
+| [Faza-C-uvod.md](Faza-C-uvod.md) | Faza C — React rute, layout, pokretanje |
 | [B-sekcija-2.1-narudzba-dto-api.md](B-sekcija-2.1-narudzba-dto-api.md) | DZ3 Faza B §2.1 — DTO / JSON odgovori narudžbe |
 | [B-sekcija-2.2-repozitorij.md](B-sekcija-2.2-repozitorij.md) | §2.2 — podaci i JOIN (indirektno kroz API) |
 | [B-sekcija-2.3-servis-validacija.md](B-sekcija-2.3-servis-validacija.md) | §2.3 — zaliha, cijena iz kataloga |

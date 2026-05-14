@@ -70,10 +70,11 @@ npm install
 npm run dev
 ```
 
-Sučelje: **http://localhost:5173** — u dva terminala pokreni **backend** pa **frontend**.
+Sučelje: **http://localhost:5173** — u dva terminala pokreni **backend** pa **frontend**. U aplikaciji: **/** (početna), **/narudzbe** (master–detail), **/kategorije** (šifrarnik). Vidi [`frontend/README.md`](frontend/README.md) i [`docs/qa/Faza-C-uvod.md`](docs/qa/Faza-C-uvod.md).
 
 ## Dokumentacija
 
-- [`docs/qa/README.md`](docs/qa/README.md) — **QA upute za kolegu** (Faza A, Faza B, §2.1–2.4, §3)
+- [`docs/qa/README.md`](docs/qa/README.md) — **QA upute za kolegu** (Faze A–C, Faza B §2–§5)
+- [`docs/qa/Faza-C-uvod.md`](docs/qa/Faza-C-uvod.md) — Faza C (React, rute, pokretanje)
 - [`docs/qa/STO-DODANO.md`](docs/qa/STO-DODANO.md) — kratak popis što je u repou
 - [`docs/DZ3_FazaB_backend_obrazlozenje.md`](docs/DZ3_FazaB_backend_obrazlozenje.md) — Faza B, backend (narudžba + kategorije)

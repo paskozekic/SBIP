@@ -1,30 +1,59 @@
 .spib {
-  max-width: 720px;
+  max-width: 1100px;
   margin: 0 auto;
-  padding: 2rem 1.25rem;
-  font-family: system-ui, sans-serif;
+  padding: 1.5rem 1.25rem 2.5rem;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
   line-height: 1.5;
   color: #1a1a1a;
 }
 
-header h1 {
+.spib-layout {
+  max-width: 1100px;
+}
+
+.spib-header h1 {
   margin: 0;
   font-size: 1.75rem;
 }
 
 .podnaslov {
-  margin: 0.25rem 0 1.5rem;
+  margin: 0.25rem 0 1rem;
   color: #555;
   font-size: 0.95rem;
 }
 
-section {
-  margin-bottom: 2rem;
+.nav-glava {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e0e0e0;
 }
 
-section h2 {
-  margin: 0 0 0.5rem;
-  font-size: 1.1rem;
+.nav-a {
+  display: inline-block;
+  padding: 0.45rem 0.9rem;
+  border-radius: 8px;
+  text-decoration: none;
+  color: #1a5f9e;
+  font-weight: 500;
+  border: 1px solid transparent;
+}
+
+.nav-a:hover {
+  background: #f0f7fc;
+}
+
+.nav-a--aktivno {
+  background: #1a5f9e;
+  color: #fff;
+  border-color: #154a7a;
+}
+
+.spib-main section h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1.2rem;
 }
 
 .hint {
@@ -44,18 +73,217 @@ section h2 {
 .greska {
   color: #b00020;
   font-size: 0.9rem;
+  margin: 0.5rem 0;
 }
 
-.lista {
+.poruka {
+  color: #0d6b3a;
+  font-size: 0.9rem;
+  margin: 0.5rem 0;
+}
+
+.panel {
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  padding: 1rem 1rem 1.25rem;
+  background: #fafafa;
+}
+
+.panel--siroko {
+  min-height: 280px;
+}
+
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.panel-head h2 {
   margin: 0;
-  padding-left: 1.25rem;
+  font-size: 1.1rem;
 }
 
-.lista .naziv {
+.grid-dva {
+  display: grid;
+  grid-template-columns: minmax(220px, 280px) 1fr;
+  gap: 1rem;
+  align-items: start;
+}
+
+@media (max-width: 800px) {
+  .grid-dva {
+    grid-template-columns: 1fr;
+  }
+}
+
+.forma-blok {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  background: #fff;
+  border: 1px solid #e8e8e8;
+  border-radius: 8px;
+}
+
+.forma-blok--zag {
+  margin-bottom: 1.25rem;
+}
+
+.forma-blok--filter {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+
+.forma-blok label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #333;
+}
+
+.forma-blok input,
+.forma-blok select,
+.forma-blok textarea {
+  font: inherit;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  max-width: 100%;
+}
+
+.btn {
+  align-self: flex-start;
+  font: inherit;
+  cursor: pointer;
+  padding: 0.45rem 0.95rem;
+  border-radius: 8px;
+  border: 1px solid #1a5f9e;
+  background: #1a5f9e;
+  color: #fff;
+  font-weight: 500;
+}
+
+.btn:hover {
+  background: #154a7a;
+}
+
+.btn-sekundarni {
+  background: #fff;
+  color: #1a5f9e;
+}
+
+.btn-sekundarni:hover {
+  background: #f0f7fc;
+}
+
+.btn-mali {
+  padding: 0.25rem 0.55rem;
+  font-size: 0.82rem;
+}
+
+.btn-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.lista-nar {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 60vh;
+  overflow: auto;
+}
+
+.lista-nar li {
+  margin-bottom: 0.35rem;
+}
+
+.lista-nar__btn {
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.lista-nar__btn:hover {
+  border-color: #1a5f9e;
+}
+
+.lista-nar__btn--akt {
+  border-color: #1a5f9e;
+  background: #e8f2fa;
+}
+
+.lista-nar__id {
+  font-weight: 700;
+  margin-right: 0.35rem;
+}
+
+.lista-nar__meta {
+  font-size: 0.88rem;
+}
+
+.lista-nar__dat {
+  display: block;
+  font-size: 0.75rem;
+  color: #777;
+  margin-top: 0.15rem;
+}
+
+.table-wrap {
+  overflow-x: auto;
+  margin: 0.5rem 0 1rem;
+}
+
+.tablica {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.tablica th,
+.tablica td {
+  padding: 0.45rem 0.6rem;
+  border-bottom: 1px solid #eee;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.tablica th {
+  background: #f3f3f3;
   font-weight: 600;
 }
 
-.lista .opis {
+.tablica-akcije {
+  white-space: nowrap;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.tablica-opis {
+  max-width: 320px;
   color: #555;
-  font-weight: normal;
+  font-size: 0.88rem;
+}
+
+.kategorije-page .forma-blok--filter label {
+  flex: 1 1 200px;
 }

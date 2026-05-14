@@ -35,6 +35,9 @@ API sluša na **http://localhost:3000** (ili `PORT` iz `.env`).
 | Metoda | Put | Opis |
 |--------|-----|------|
 | GET | `/api/health` | Provjera da API radi |
+| GET | `/api/kupci` | Lista kupaca (ime, prezime) — za UI padajući izbor |
+| GET | `/api/djelatnici` | Lista djelatnika — za UI |
+| GET | `/api/bicikli` | Lista bicikala (id, naziv, zaliha, cijena) — za UI stavke |
 | GET | `/api/kategorije?q=` | Lista kategorija, opcijski filter po nazivu |
 | GET | `/api/kategorije/za-odabir` | Kratki popis za dropdown |
 | GET | `/api/kategorije/:id` | Jedna kategorija |
@@ -93,6 +96,9 @@ Iz mape `backend/` (ili bilo gdje) uz pokrenut API i bazu:
 irm http://localhost:3000/api/health
 irm http://localhost:3000/api/narudzbe/1
 irm http://localhost:3000/api/kategorije/za-odabir
+irm http://localhost:3000/api/kupci
+irm http://localhost:3000/api/djelatnici
+irm http://localhost:3000/api/bicikli
 
 # POST narudžba
 $body = '{"status":"NOVA","kupac_korisnik_id":1,"djelatnik_korisnik_id":null}' 
@@ -117,4 +123,4 @@ Detaljnije scenarije (DTO, zaliha, svi REST koraci): mapi **`docs/qa/`** (datote
 - **Build:** `npm run build` → `dist/`, pokretanje `npm start`
 - **Typecheck:** `npm run typecheck`
 
-Sljedeći koraci za DZ3: **Vitest** u `tests/`, UI master–detail na frontendu.
+Sljedeći koraci za DZ3: **Vitest** u `tests/` (Faza D).
