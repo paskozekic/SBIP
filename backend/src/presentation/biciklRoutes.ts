@@ -34,7 +34,7 @@ export async function registerBiciklRoutes(app: FastifyInstance): Promise<void> 
     return service.katalog(f);
   });
 
-  /** Pojedinačne jedinice (najam, detalj vrste u adminu). */
+  
   app.get("/katalog/bicikli/jedinice", async (request, reply) => {
     try {
       forbidAdministratorKatalog(request);

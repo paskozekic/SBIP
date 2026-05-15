@@ -177,10 +177,7 @@ export class NarudzbaService {
     }
   }
 
-  /**
-   * Djelatnik smije potvrditi narudžbu: NOVA → POTVRDJENA, uz automatski zapis trenutnog djelatnika.
-   * U bazi se pri tom prvim prijelazu u Potvrđena knjiži prodaja (prodaja_obradena, datum_zavrsetka) za izvještaj.
-   */
+  
   private async updateZaglavljeDjelatnikPotvrda(
     id: number,
     cur: NarudzbaDetaljRow,

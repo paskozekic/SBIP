@@ -1,7 +1,7 @@
 import { NavLink, Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
-/** Gost smije samo katalog + prijava/registracija (bez toga nema puta do računa). */
+
 const GOST_PUTEVI = new Set(["/katalog", "/prijava", "/registracija"]);
 
 export default function Layout() {

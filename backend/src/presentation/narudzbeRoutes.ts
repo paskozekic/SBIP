@@ -64,7 +64,7 @@ export async function registerNarudzbeRoutes(
     }
   });
 
-  /** Nova narudžba kupnje samo preko `POST /kupnja` (kupac + model + zaliha). Prazno zaglavlje nije dozvoljeno. */
+  
   app.post("/narudzbe", async (request, reply) => {
     try {
       requireAuth(request);

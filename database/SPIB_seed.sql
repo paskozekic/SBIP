@@ -85,7 +85,7 @@ CROSS JOIN Korisnik d_djel
 WHERE k_korisnik.email = 'marko.narucitelj@spi.local'
   AND d_djel.email = 'petra.djelatnik@spi.local';
 
--- Stavke (narudžba NOVA): City 1 kom, Trail dva odvojena retka
+
 INSERT INTO StavkaNarudzbe (kolicina, cijena, jedinica_id, narudzba_id)
 SELECT 1, b.cijena, j.jedinica_id, n.narudzba_id
 FROM bicikl_jedinica j
@@ -129,7 +129,7 @@ CROSS JOIN LATERAL (
 WHERE b.naziv = 'Kid 20"' AND j.status = 'DOSTUPAN'
 ORDER BY j.jedinica_id LIMIT 1;
 
--- Markova POTVRDJENA (kao nakon djelatnikove potvrde): knjiženje za izvještaj prodaje
+
 UPDATE narudzba n SET prodaja_obradena = TRUE,
   datum_zavrsetka = COALESCE(n.datum_zavrsetka, n.datum)
 FROM kupac ku
@@ -137,7 +137,7 @@ JOIN korisnik k ON k.korisnik_id = ku.korisnik_id
 WHERE n.kupac_korisnik_id = k.korisnik_id AND k.email = 'marko.narucitelj@spi.local'
   AND n.status = 'POTVRDJENA' AND NOT n.prodaja_obradena;
 
--- Povijesni najam (RockRide — nema stavke)
+
 INSERT INTO Najam (datum_pocetka, datum_zavrsetka, status_najma, ukupna_cijena, jedinica_id, djelatnik_korisnik_id, kupac_korisnik_id)
 SELECT DATE '2025-03-10', DATE '2025-03-15', 'VRACEN', 5 * 45.00,
   (SELECT j.jedinica_id FROM bicikl_jedinica j JOIN Bicikl b ON b.bicikl_id = j.bicikl_id WHERE b.naziv = 'RockRide Comp' ORDER BY j.jedinica_id LIMIT 1),

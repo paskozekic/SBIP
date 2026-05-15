@@ -1,8 +1,4 @@
--- =============================================================================
--- SPIB – Sustav za prodaju i iznajmljivanje bicikala
--- PostgreSQL: kreiranje sheme (DZ2 / DZ3)
--- bicikl = vrsta/model; bicikl_jedinica = pojedinačna skladišna jedinica
--- =============================================================================
+
 
 CREATE TABLE Korisnik (
     korisnik_id SERIAL PRIMARY KEY,
@@ -43,7 +39,7 @@ CREATE TABLE KategorijaBicikla (
     opis TEXT
 );
 
--- Vrsta / model (cijene i naziv zajednički za sve jedinice te vrste)
+
 CREATE TABLE Bicikl (
     bicikl_id SERIAL PRIMARY KEY,
     naziv VARCHAR(100) NOT NULL,

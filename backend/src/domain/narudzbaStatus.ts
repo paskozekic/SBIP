@@ -1,7 +1,4 @@
-/**
- * Kanonski kodovi statusa narudžbe (API + baza + UI).
- * Hrvatski prikazni nazivi za korisničko sučelje.
- */
+
 
 export const NARUDZBA_STATUSI = [
   "NOVA",

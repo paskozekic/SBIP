@@ -137,9 +137,7 @@ export class NarudzbaRepository {
     return res.rows[0]!.narudzba_id;
   }
 
-  /**
-   * Jedna transakcija: narudžba NOVA + N stavki (po jednoj jedinici), s zaključavanjem jedinica.
-   */
+  
   async insertKupnjaNarudzbaSaStavkom(params: {
     kupacKorisnikId: number;
     adresaDostave: string;

@@ -154,9 +154,7 @@ export class BiciklService {
     return ok ? { ok: true } : { ok: false, reason: "NOT_FOUND" };
   }
 
-  /**
-   * Djelatnik: jedinice u statusu DOSTUPAN → U_SERVISU (jedinica_id u tijelu).
-   */
+ 
   async postaviOdabraneNaServis(
     ids: unknown,
   ): Promise<{

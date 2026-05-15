@@ -1,6 +1,6 @@
 import { pool } from "./pool.js";
 
-/** Red u katalogu = vrsta (agregat dostupnih jedinica). */
+
 export type BiciklRow = {
   bicikl_id: number;
   inventarni_broj: string;
@@ -13,7 +13,7 @@ export type BiciklRow = {
   cijena_najma_po_danu: string | null;
 };
 
-/** Jedna skladišna jedinica (detalj vrste). */
+
 export type BiciklJedinicaRow = {
   jedinica_id: number;
   bicikl_id: number;
@@ -42,7 +42,7 @@ function defaultInventarni(jedinicaId: number): string {
 }
 
 export class BiciklRepository {
-  /** Katalog: jedan red po vrsti; kolicina = broj jedinica u statusu DOSTUPAN. */
+  
   async findKatalog(f: BiciklKatalogFilter): Promise<BiciklRow[]> {
     const cond: string[] = ["1=1"];
     const vals: unknown[] = [];
@@ -126,7 +126,7 @@ export class BiciklRepository {
     return res.rows;
   }
 
-  /** Jedan red kataloga kao BiciklRow (za GET /bicikli/:id kompatibilnost). */
+ 
   async findKatalogRowForVrsta(id: number): Promise<BiciklRow | null> {
     const rows = await this.findKatalog({});
     return rows.find((r) => r.bicikl_id === id) ?? null;
