@@ -1,5 +1,0 @@
-
-> spib-backend@1.0.0 typecheck
-> tsc --noEmit -
-
-error TS5023: Unknown compiler option '-'.
